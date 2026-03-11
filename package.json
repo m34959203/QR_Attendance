@@ -1,0 +1,30 @@
+{
+  "name": "qr-attendance",
+  "version": "1.1.0",
+  "description": "Система контроля посещаемости учеников через QR-код с уведомлениями в WhatsApp и Telegram",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "keywords": [
+    "attendance",
+    "qr",
+    "whatsapp",
+    "telegram",
+    "school"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.1.0",
+    "nodemailer": "^8.0.2",
+    "qrcode": "^1.5.4",
+    "sql.js": "^1.14.1",
+    "uuid": "^11.1.0"
+  }
+}

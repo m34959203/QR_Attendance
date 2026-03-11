@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /scan/
+Disallow: /admin
+Disallow: /api/
+Allow: /privacy
+Allow: /help

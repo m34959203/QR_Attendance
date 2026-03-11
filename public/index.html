@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>QR Посещаемость — Панель учителя</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e}
+
+/* ── Шапка ── */
+header{background:linear-gradient(135deg,#2E5FA3,#4472C4);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+header h1{color:#fff;font-size:17px;font-weight:700}
+.header-right{display:flex;align-items:center;gap:10px}
+.wa-badge{display:flex;align-items:center;gap:7px;cursor:pointer;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px}
+.wa-badge span{color:#fff;font-size:12px;font-weight:500}
+
+/* ── Вкладки ── */
+.tabs{background:#fff;display:flex;overflow-x:auto;border-bottom:2px solid #e8ecf2;padding:0 12px;position:sticky;top:49px;z-index:40}
+.tab{padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.15s}
+.tab.active{color:#2E5FA3;border-bottom-color:#2E5FA3}
+.tab:hover:not(.active){color:#555}
+
+/* ── Контент ── */
+.content{padding:18px;max-width:1200px;margin:0 auto}
+.card{background:#fff;border-radius:14px;padding:22px 24px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+
+/* ── Дашборд ── */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.dash-card{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.dash-num{font-size:36px;font-weight:800;color:#2E5FA3;line-height:1}
+.dash-lbl{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
+.dash-icon{font-size:28px;margin-bottom:8px}
+.dash-ok .dash-num{color:#27ae60}
+.dash-warn .dash-num{color:#e53935}
+
+/* ── Онбординг ── */
+.onboard{background:linear-gradient(135deg,#667eea15,#764ba215);border:2px dashed #667eea50;border-radius:14px;padding:28px;text-align:center;margin-bottom:18px}
+.onboard h2{color:#2E5FA3;margin-bottom:16px;font-size:20px}
+.checklist{display:flex;flex-direction:column;gap:10px;text-align:left;max-width:420px;margin:0 auto 20px}
+.check-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.check-item .icon{font-size:20px}
+.check-item .text{font-size:14px;color:#333}
+
+/* ── Формы ── */
+.form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1;position:relative}
+.field label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
+.field label .tip{font-size:11px;color:#aaa;font-weight:400;text-transform:none}
+input[type=text],input[type=time],input[type=number],input[type=date],input[type=tel],select,textarea{border:1.5px solid #e0e4ec;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;background:#fff;width:100%;font-family:inherit;transition:.15s}
+input:focus,select:focus,textarea:focus{border-color:#4472C4;box-shadow:0 0 0 3px rgba(68,114,196,.12)}
+input:invalid{border-color:#e53935}
+.field .hint{font-size:11px;color:#aaa;margin-top:3px}
+
+/* ── Кнопки ── */
+.btn{padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#2E5FA3;color:#fff}
+.btn-primary:hover:not(:disabled){background:#224880}
+.btn-outline{background:#fff;color:#2E5FA3;border:1.5px solid #2E5FA3}
+.btn-outline:hover{background:#f0f4fa}
+.btn-danger{background:#fff;color:#e53935;border:1.5px solid #e53935}
+.btn-danger:hover{background:#fff5f5}
+.btn-success{background:#27ae60;color:#fff}
+.btn-success:hover{background:#1e8449}
+.btn-warn{background:#fff;color:#e65100;border:1.5px solid #ff9800}
+.btn-warn:hover{background:#fff8f0}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:8px}
+
+/* ── Статус точки ── */
+.dot{width:9px;height:9px;border-radius:50%;background:#ccc;flex-shrink:0}
+.dot.ready{background:#27ae60;box-shadow:0 0 0 3px rgba(39,174,96,.2)}
+.dot.warn{background:#f39c12}
+.dot.err{background:#e53935}
+
+/* ── Уведомление ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;z-index:1000;transform:translateY(100px);opacity:0;transition:.3s;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#27ae60}
+.toast.err{background:#e53935}
+
+/* ── Карточки учеников ── */
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.student-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1.5px solid #e8ecf2;transition:.2s;position:relative}
+.student-card:hover{border-color:#4472C4;box-shadow:0 4px 16px rgba(46,95,163,.1)}
+.student-card.no-consent{border-color:#ff980050;background:#fff8f0}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-bottom:10px}
+.student-card h3{font-size:15px;margin-bottom:5px}
+.meta{font-size:12px;color:#888;line-height:1.8;margin-bottom:10px}
+.channels{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.ch{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px}
+.ch-wa{background:#e8f5e9;color:#2e7d32}
+.ch-tg{background:#e3f2fd;color:#1565c0}
+.ch-late{background:#fff3e0;color:#e65100}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.consent-badge{position:absolute;top:12px;right:12px;font-size:10px;padding:2px 7px;border-radius:8px}
+.consent-ok{background:#e8f5e9;color:#2e7d32}
+.consent-no{background:#fff3e0;color:#e65100}
+
+/* ── Фильтры-чипы ── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e4ec;background:#fff;color:#666;transition:.15s}
+.chip.active{background:#2E5FA3;color:#fff;border-color:#2E5FA3}
+.chip:hover:not(.active){border-color:#4472C4;color:#2E5FA3}
+
+/* ── Поиск ── */
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap input{padding-left:36px}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
+
+/* ── Таблица ── */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1.5px solid #e8ecf2}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f7f9fc;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:#888;letter-spacing:.4px;border-bottom:1.5px solid #e8ecf2;cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:#2E5FA3}
+th.sort-asc::after{content:' ▲'}
+th.sort-desc::after{content:' ▼'}
+td{padding:10px 14px;border-bottom:1px solid #f0f2f5;color:#333}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfd}
+
+/* ── Бейджи ── */
+.badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.b-ok{background:#e8f5e9;color:#2e7d32}
+.b-late{background:#fce4ec;color:#c62828}
+.b-sick{background:#e3f2fd;color:#1565c0}
+.b-valid{background:#f3e5f5;color:#6a1b9a}
+.b-warn{background:#fff3e0;color:#e65100}
+.b-err{background:#fce4ec;color:#c62828}
+.b-q{background:#fffde7;color:#f57f17}
+
+/* ── Статистика ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.stat-card{background:#f7f9fc;border-radius:12px;padding:16px;text-align:center;border:1.5px solid #e8ecf2}
+.stat-card .month{font-size:12px;color:#888;margin-bottom:8px}
+.stat-card .num{font-size:28px;font-weight:800;color:#2E5FA3}
+.stat-summary{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:20px}
+.stat-summary .s{text-align:center}
+.stat-summary .sn{font-size:34px;font-weight:800}
+.stat-summary .sl{font-size:11px;color:#aaa;text-transform:uppercase}
+
+/* ── QR ── */
+.print-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
+.qr-card{text-align:center;padding:18px;border:2px solid #e0e4ec;border-radius:14px;background:#fff}
+.qr-card h3{font-size:13px;font-weight:700;margin-top:8px;margin-bottom:3px}
+.qr-card p{font-size:10px;color:#aaa;word-break:break-all}
+
+/* ── WA панель ── */
+.wa-stat-row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px}
+.wa-stat{text-align:center}
+.wa-stat .n{font-size:30px;font-weight:800;color:#2E5FA3}
+.wa-stat .l{font-size:11px;color:#aaa;text-transform:uppercase}
+
+/* ── Модалка ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:18px;padding:28px;max-width:420px;width:100%;text-align:center;max-height:90vh;overflow-y:auto}
+.modal-box h2{margin-bottom:8px;font-size:19px}
+.modal-box img{max-width:220px;margin:12px auto;display:block;border-radius:10px}
+.modal-url{font-size:11px;color:#aaa;word-break:break-all;margin:8px 0 16px}
+.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ── Лог строки ── */
+.log-sent td{background:#f1faf5}
+.log-err td{background:#fff5f5}
+.log-q td{background:#fffbf0}
+
+/* ── Дата-фильтр ── */
+.date-filter{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.date-filter label{font-size:12px;color:#888;font-weight:600}
+
+/* ── Печать ── */
+@media print{
+  header,.tabs,.no-print{display:none!important}
+  .print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .qr-card{break-inside:avoid}
+}
+
+/* ── Тест-блок ── */
+.test-block{background:#f7f9fc;border-radius:12px;padding:16px;margin-top:16px}
+.test-block h3{font-size:14px;margin-bottom:12px;color:#555}
+
+/* ── Импорт ── */
+.import-zone{border:2px dashed #c8d6e8;border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
+.import-zone:hover{border-color:#4472C4;background:#f0f4fa}
+.import-zone p{color:#888;font-size:14px}
+
+/* ── Аудит ── */
+.audit-action{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#e8ecf2;color:#555}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 QR Посещаемость</h1>
+  <div class="header-right">
+    <div class="wa-badge" id="wa-badge" onclick="showTab('whatsapp')">
+      <div class="dot" id="wa-dot"></div>
+      <span id="wa-text">WA...</span>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('dashboard')">📊 Сегодня</div>
+  <div class="tab" onclick="showTab('students')">👥 Ученики</div>
+  <div class="tab" onclick="showTab('groups')">🏫 Группы</div>
+  <div class="tab" onclick="showTab('attendance')">📋 Журнал</div>
+  <div class="tab" onclick="showTab('stats')">📈 Статистика</div>
+  <div class="tab" onclick="showTab('print')">🖨 Печать QR</div>
+  <div class="tab" onclick="showTab('whatsapp')">📱 WhatsApp</div>
+  <div class="tab" onclick="showTab('telegram')">📨 Telegram</div>
+  <div class="tab" onclick="showTab('audit')">🔍 Аудит</div>
+  <div class="tab" onclick="showTab('email')">📧 Email</div>
+  <div class="tab" onclick="showTab('errors')">⚠️ Ошибки</div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════════════ ДАШБОРД ══════════════════════════════ -->
+<div id="tab-dashboard">
+  <div id="dash-onboard" style="display:none" class="onboard">
+    <h2>👋 Добро пожаловать!</h2>
+    <p style="color:#666;margin-bottom:20px;font-size:14px">Система готова к работе. Выполните несколько шагов для начала:</p>
+    <div class="checklist" id="onboard-checklist"></div>
+    <button class="btn btn-primary" onclick="showTab('groups')">Начать настройку →</button>
+  </div>
+  <div class="dash-grid" id="dash-cards"></div>
+  <div class="card no-print" id="dash-chart-card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3>Посещаемость за 7 дней</h3>
+    </div>
+    <div id="dash-chart" style="display:flex;align-items:flex-end;gap:8px;height:80px"></div>
+  </div>
+  <div class="card no-print">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3>Последние сканирования</h3>
+      <button class="btn btn-outline btn-sm" onclick="loadDashboard()">🔄</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Ученик</th><th>Группа</th><th>Время</th><th>Статус</th></tr></thead>
+      <tbody id="dash-recent"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ УЧЕНИКИ ══════════════════════════════ -->
+<div id="tab-students" style="display:none">
+  <div class="card no-print">
+    <h2 style="margin-bottom:16px">➕ Добавить ученика</h2>
+    <div class="form-row">
+      <div class="field" style="flex:2;min-width:180px">
+        <label>Имя ученика</label>
+        <input id="f-name" type="text" placeholder="Алия Иванова" required>
+      </div>
+      <div class="field">
+        <label>Телефон WhatsApp <span class="tip">только цифры</span></label>
+        <input id="f-phone" type="tel" placeholder="77001234567">
+        <span class="hint">77001234567</span>
+      </div>
+      <div class="field">
+        <label>Имя родителя</label>
+        <input id="f-parent" placeholder="Гульнара апай">
+      </div>
+      <div class="field">
+        <label>Telegram chat_id <span class="tip">от /start</span></label>
+        <input id="f-tg" placeholder="123456789">
+      </div>
+      <div class="field">
+        <label>Группа</label>
+        <select id="f-group"><option value="">— без группы —</option></select>
+      </div>
+      <div class="field">
+        <label>Email родителя</label>
+        <input id="f-email" type="email" placeholder="parent@mail.ru">
+        <span class="hint">Для email-уведомлений</span>
+      </div>
+      <div class="field">
+        <label>Дата согласия ПД</label>
+        <input id="f-consent" type="date">
+        <span class="hint">Обязательно для GDPR</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" id="add-btn" onclick="addStudent()">Добавить ученика</button>
+      <label class="btn btn-outline" style="cursor:pointer">
+        📥 Импорт CSV/Excel
+        <input type="file" accept=".csv,.xlsx" style="display:none" onchange="importStudents(this)">
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#666;cursor:pointer">
+        <input type="checkbox" id="show-archived" onchange="loadStudents()">
+        Показать архивных
+      </label>
+    </div>
+  </div>
+
+  <div class="no-print" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+    <div class="search-wrap">
+      <input type="text" id="student-search" placeholder="Поиск по имени..." oninput="loadStudents()" style="min-width:200px">
+    </div>
+    <div class="chips" id="student-chips" style="margin:0"></div>
+  </div>
+
+  <div id="students-list" class="students-grid"></div>
+</div>
+
+<!-- ══════════════════════════════ ГРУППЫ ══════════════════════════════ -->
+<div id="tab-groups" style="display:none">
+  <div class="card">
+    <h2 style="margin-bottom:16px">➕ Создать группу</h2>
+    <div class="form-row">
+      <div class="field" style="flex:2"><label>Название</label><input id="g-name" placeholder="7А класс"></div>
+      <div class="field"><label>Начало урока</label><input id="g-start" type="time" value="09:00"></div>
+      <div class="field"><label>Порог опоздания (мин)</label><input id="g-late" type="number" value="10" min="1" max="120"></div>
+      <button class="btn btn-primary" onclick="addGroup()">Создать</button>
+    </div>
+  </div>
+  <div id="groups-list"></div>
+</div>
+
+<!-- ══════════════════════════════ ЖУРНАЛ ══════════════════════════════ -->
+<div id="tab-attendance" style="display:none">
+  <div class="card no-print">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <div class="date-filter">
+        <label>С</label><input type="date" id="att-from" style="width:140px">
+        <label>По</label><input type="date" id="att-to" style="width:140px">
+        <button class="btn btn-outline btn-sm" onclick="loadAttendance()">Применить</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="loadAttendance()">🔄</button>
+        <button class="btn btn-success btn-sm" onclick="exportExcel()">📥 Excel</button>
+      </div>
+    </div>
+    <div class="chips" id="att-chips" style="margin-top:12px"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortTable('att-body',0)">Ученик</th>
+          <th onclick="sortTable('att-body',1)">Группа</th>
+          <th onclick="sortTable('att-body',2)">Дата</th>
+          <th onclick="sortTable('att-body',3)">Время</th>
+          <th>Статус</th>
+        </tr>
+      </thead>
+      <tbody id="att-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ СТАТИСТИКА ══════════════════════════════ -->
+<div id="tab-stats" style="display:none">
+  <div class="card">
+    <div class="form-row">
+      <div class="field" style="flex:2"><label>Ученик</label><select id="stats-student"></select></div>
+      <button class="btn btn-primary" onclick="loadStats()">Показать</button>
+    </div>
+  </div>
+  <div id="stats-result"></div>
+</div>
+
+<!-- ══════════════════════════════ ПЕЧАТЬ QR ══════════════════════════════ -->
+<div id="tab-print" style="display:none">
+  <div class="card no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div class="chips" id="print-chips" style="margin:0"></div>
+    <button class="btn btn-primary" onclick="window.print()">🖨 Распечатать все</button>
+  </div>
+  <div id="print-grid" class="print-grid"></div>
+</div>
+
+<!-- ══════════════════════════════ WHATSAPP ══════════════════════════════ -->
+<div id="tab-whatsapp" style="display:none">
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <div style="font-size:20px;font-weight:800">Green API</div>
+        <div style="font-size:12px;color:#aaa">Провайдер WhatsApp уведомлений</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="dot" id="wa-dot2"></div>
+        <span id="wa-status-label" style="font-size:16px;font-weight:700"></span>
+        <button class="btn btn-outline btn-sm" onclick="loadWAStatus()">🔄</button>
+      </div>
+    </div>
+    <div id="wa-detail" style="font-size:13px;color:#888;margin-bottom:16px"></div>
+    <div class="wa-stat-row">
+      <div class="wa-stat"><div class="n" id="ws-sent">—</div><div class="l">Отправлено</div></div>
+      <div class="wa-stat"><div class="n" id="ws-fail">—</div><div class="l">Ошибки</div></div>
+      <div class="wa-stat"><div class="n" id="ws-queue">—</div><div class="l">В очереди</div></div>
+    </div>
+    <div class="test-block">
+      <h3>🧪 Тестовое сообщение</h3>
+      <div class="form-row">
+        <div class="field"><label>Номер телефона</label><input id="wa-test-phone" type="tel" placeholder="77001234567"></div>
+        <button class="btn btn-outline" onclick="sendTestWA()">Отправить тест</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3>Лог сообщений</h3>
+      <button class="btn btn-outline btn-sm" onclick="loadWAStatus()">🔄</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Время</th><th>Статус</th><th>Ученик</th></tr></thead>
+      <tbody id="wa-log-body"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ TELEGRAM ══════════════════════════════ -->
+<div id="tab-telegram" style="display:none">
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <div style="font-size:20px;font-weight:800">Telegram Bot</div>
+        <div style="font-size:12px;color:#aaa">Второй канал уведомлений</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="dot" id="tg-dot"></div>
+        <span id="tg-status-label" style="font-size:16px;font-weight:700">Проверка...</span>
+        <button class="btn btn-outline btn-sm" onclick="loadTGStatus()">🔄</button>
+      </div>
+    </div>
+    <div id="tg-mode" style="font-size:13px;color:#2E5FA3;font-weight:600;margin-bottom:16px"></div>
+
+    <div class="test-block">
+      <h3>🧪 Тестовое сообщение</h3>
+      <div class="form-row">
+        <div class="field"><label>chat_id</label><input id="tg-test-id" placeholder="123456789"></div>
+        <button class="btn btn-outline" onclick="sendTestTG()">Отправить тест</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:16px">⚙️ Как подключить бота</h2>
+    <ol style="padding-left:20px;line-height:2.1;font-size:14px;color:#555">
+      <li>Напишите <b>@BotFather</b> → <code>/newbot</code> → дайте имя</li>
+      <li>Скопируйте токен в <code>.env</code> → <code>TELEGRAM_BOT_TOKEN=...</code></li>
+      <li>Перезапустите сервер. Webhook установится автоматически (на VPS/домене)</li>
+    </ol>
+    <div style="background:#e8f5e9;border-radius:10px;padding:14px;font-size:13px;color:#2e7d32;margin-top:16px">
+      ✅ После настройки уведомления идут одновременно в WhatsApp и Telegram
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:12px">👩‍👧 Как родителю подключить Telegram</h2>
+    <ol style="padding-left:20px;line-height:2.1;font-size:14px;color:#555">
+      <li>Родитель находит бота и пишет <code>/start</code></li>
+      <li>Бот отвечает с chat_id</li>
+      <li>Учитель вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
+    </ol>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ АУДИТ ══════════════════════════════ -->
+<div id="tab-audit" style="display:none">
+  <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <h2>🔍 Журнал действий</h2>
+      <p style="font-size:13px;color:#aaa;margin-top:4px">Все изменения данных фиксируются автоматически</p>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="loadAudit()">🔄</button>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>Время</th><th>Действие</th><th>Объект</th><th>Детали</th><th>IP</th></tr></thead>
+    <tbody id="audit-body"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px">Загрузка...</td></tr></tbody></table>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════ EMAIL ══════════════════════════════ -->
+<div id="tab-email" style="display:none">
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <div style="font-size:20px;font-weight:800">SMTP Email</div>
+        <div style="font-size:12px;color:#aaa">Третий канал уведомлений для родителей 50+</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="dot" id="em-dot"></div>
+        <span id="em-status-label" style="font-size:16px;font-weight:700">Проверка...</span>
+        <button class="btn btn-outline btn-sm" onclick="loadEmailStatus()">🔄</button>
+      </div>
+    </div>
+    <div id="em-detail" style="font-size:13px;color:#888;margin-bottom:16px"></div>
+    <div class="test-block">
+      <h3>🧪 Тестовое письмо</h3>
+      <div class="form-row">
+        <div class="field"><label>Email адрес</label><input id="em-test-addr" type="email" placeholder="test@mail.ru"></div>
+        <button class="btn btn-outline" onclick="sendTestEmail()">Отправить тест</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin-bottom:16px">⚙️ Настройка SMTP</h2>
+    <p style="font-size:14px;color:#555;margin-bottom:16px">Добавьте в файл <code>.env</code>:</p>
+    <div style="background:#1a1a2e;color:#a8ff78;border-radius:10px;padding:16px;font-family:monospace;font-size:13px;line-height:1.8;overflow-x:auto">
+      SMTP_HOST=smtp.gmail.com<br>
+      SMTP_PORT=465<br>
+      SMTP_USER=your@gmail.com<br>
+      SMTP_PASS=your_app_password
+    </div>
+    <div style="background:#fff3e0;border-left:4px solid #f39c12;border-radius:8px;padding:14px;font-size:13px;margin-top:16px">
+      ⚠️ Для Gmail: включите двухфакторную аутентификацию и создайте «Пароль приложения» в настройках безопасности аккаунта.
+    </div>
+    <div style="background:#e8f5e9;border-radius:10px;padding:14px;font-size:13px;color:#2e7d32;margin-top:12px">
+      ✅ После настройки письма будут отправляться всем ученикам у кого указан <b>Email родителя</b> в карточке.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ ОШИБКИ ══════════════════════════════ -->
+<div id="tab-errors" style="display:none">
+  <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <h2>⚠️ Журнал ошибок</h2>
+      <p style="font-size:13px;color:#aaa;margin-top:4px">Последние 50 ошибок сервера</p>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="loadErrors()">🔄</button>
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>Время</th><th>Сообщение</th><th>URL</th><th>IP</th></tr></thead>
+    <tbody id="errors-body"><tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px">Загрузка...</td></tr></tbody></table>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- Тост -->
+<div class="toast" id="toast"></div>
+
+<!-- Модалка QR -->
+<div class="modal" id="qr-modal">
+  <div class="modal-box">
+    <h2 id="qr-name"></h2>
+    <p style="color:#aaa;font-size:13px">Распечатайте и повесьте у входа в кабинет</p>
+    <img id="qr-img" src="" alt="QR">
+    <p class="modal-url" id="qr-url"></p>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="printSingleQR()">🖨 Печать</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('qr-modal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка подробностей ученика -->
+<div class="modal" id="student-modal">
+  <div class="modal-box" style="text-align:left">
+    <h2 id="sm-name" style="margin-bottom:16px;text-align:center"></h2>
+    <div id="sm-content"></div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-danger btn-sm" id="sm-gdpr-btn">🗑 Удалить все данные (GDPR)</button>
+      <button class="btn btn-warn btn-sm" id="sm-archive-btn">📦 Архивировать</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('student-modal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка рассылки -->
+<div class="modal" id="broadcast-modal">
+  <div class="modal-box" style="text-align:left">
+    <h2 style="margin-bottom:12px">📢 Рассылка группе</h2>
+    <p style="font-size:13px;color:#888;margin-bottom:14px">Сообщение придёт всем родителям группы <b id="bc-group-name"></b></p>
+    <textarea id="bc-message" rows="4" style="width:100%;resize:vertical;margin-bottom:14px" placeholder="Введите сообщение..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="bc-send-btn">📨 Отправить</button>
+      <button class="btn btn-outline" onclick="closeModal('broadcast-modal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// СОСТОЯНИЕ
+// ════════════════════════════════════════════════════════════════
+const TABS = ['dashboard','students','groups','attendance','stats','print','whatsapp','telegram','audit','email','errors'];
+let _groups        = [];
+let _studentGrp    = null;
+let _attGrp        = null;
+let _printGrp      = null;
+let _attSortCol    = -1;
+let _attSortAsc    = true;
+let _broadcastGrpId = null;
+
+// ════════════════════════════════════════════════════════════════
+// ВКЛАДКИ
+// ════════════════════════════════════════════════════════════════
+function showTab(name) {
+  TABS.forEach(n => {
+    document.getElementById('tab-'+n).style.display = n===name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', TABS[i]===name));
+  const loaders = {
+    dashboard: loadDashboard,
+    students:  loadStudents,
+    groups:    loadGroups,
+    attendance:loadAttendance,
+    stats:     initStats,
+    print:     loadPrintQR,
+    whatsapp:  loadWAStatus,
+    telegram:  loadTGStatus,
+    audit:     loadAudit,
+    email:     loadEmailStatus,
+    errors:    loadErrors,
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+// ════════════════════════════════════════════════════════════════
+// ТОСТ
+// ════════════════════════════════════════════════════════════════
+function toast(msg, type='ok', ms=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className='toast', ms);
+}
+
+// ════════════════════════════════════════════════════════════════
+// API
+// ════════════════════════════════════════════════════════════════
+async function api(url, opts={}) {
+  try {
+    const r = await fetch(url, { headers:{'Content-Type':'application/json'}, ...opts });
+    return await r.json();
+  } catch(e) { return { error: e.message }; }
+}
+
+// ════════════════════════════════════════════════════════════════
+// ДАШБОРД
+// ════════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  const d = await api('/api/dashboard');
+  const s = d.summary || {};
+  const waOk = d.wa?.state === 'authorized';
+
+  // Онбординг
+  const steps = [
+    { done: d.groups > 0,   icon:'🏫', text:'Создать группу (класс/секцию)' },
+    { done: d.students > 0, icon:'👥', text:'Добавить учеников' },
+    { done: waOk,           icon:'📱', text:'Подключить WhatsApp (Green API)' },
+  ];
+  const onboard = document.getElementById('dash-onboard');
+  const allDone = steps.every(s => s.done);
+  onboard.style.display = allDone ? 'none' : '';
+  if (!allDone) {
+    document.getElementById('onboard-checklist').innerHTML = steps.map(st =>
+      `<div class="check-item">
+        <span class="icon">${st.done ? '✅' : st.icon}</span>
+        <span class="text" style="${st.done?'text-decoration:line-through;color:#aaa':''}">${st.text}</span>
+      </div>`
+    ).join('');
+  }
+
+  // График 7 дней
+  const chart = document.getElementById('dash-chart');
+  if (chart && d.chart) {
+    const maxVal = Math.max(...d.chart.map(c => c.present), 1);
+    chart.innerHTML = d.chart.map(c => {
+      const h = Math.max(4, Math.round((c.present / maxVal) * 70));
+      const day = new Date(c.date).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric' });
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default" title="${c.date}: ${c.present} чел${c.late ? ', опоз: '+c.late : ''}">
+        <div style="font-size:11px;color:#2E5FA3;font-weight:700">${c.present||''}</div>
+        <div style="width:100%;background:${c.late ? '#fff3e0' : '#d6eaf8'};border-radius:6px 6px 0 0;height:${h}px;position:relative">
+          ${c.late ? `<div style="position:absolute;bottom:0;width:100%;background:#f39c12;border-radius:6px 6px 0 0;height:${Math.round((c.late/c.present||0)*h)}px"></div>` : ''}
+        </div>
+        <div style="font-size:9px;color:#aaa;white-space:nowrap">${day}</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('dash-cards').innerHTML = [
+    { icon:'📅', num: s.today||'—', lbl:'Сегодня', cls:'' },
+    { icon:'👥', num: s.total||0,   lbl:'Учеников', cls:'' },
+    { icon:'✅', num: s.present||0, lbl:'Пришли', cls:'dash-ok' },
+    { icon:'⚠️', num: s.late||0,    lbl:'Опозданий', cls: s.late ? 'dash-warn' : '' },
+    { icon:'🏫', num: d.groups||0,  lbl:'Групп', cls:'' },
+    { icon:'📧', num: d.email?.ready ? '✅' : '—', lbl:'Email', cls:'' },
+  ].map(c => `<div class="dash-card ${c.cls}">
+    <div class="dash-icon">${c.icon}</div>
+    <div class="dash-num">${c.num}</div>
+    <div class="dash-lbl">${c.lbl}</div>
+  </div>`).join('');
+
+  // Последние 10 сканирований
+  const recs = await api('/api/attendance');
+  const tbody = document.getElementById('dash-recent');
+  const show = (recs||[]).slice(0,10);
+  if (!show.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px">Сканирований пока нет</td></tr>'; return; }
+  tbody.innerHTML = show.map(r => {
+    const t = new Date(r.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const status = r.isLate
+      ? `<span class="badge b-late">⚠️ +${r.minutesLate}мин</span>`
+      : `<span class="badge b-ok">✅</span>`;
+    return `<tr><td>${esc(r.studentName)}</td><td>${esc(r.groupName||'—')}</td><td>${t}</td><td>${status}</td></tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+// ГРУППЫ
+// ════════════════════════════════════════════════════════════════
+async function loadGroups() {
+  _groups = await api('/api/groups');
+  const el = document.getElementById('groups-list');
+  if (!_groups.length) {
+    el.innerHTML = `<div class="card" style="text-align:center;color:#aaa;padding:40px">
+      <div style="font-size:48px;margin-bottom:12px">🏫</div>
+      <p>Групп пока нет</p>
+      <p style="font-size:13px;margin-top:8px">Создайте первую группу выше</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = _groups.map(g => `
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:800">${esc(g.name)}</div>
+          <div style="font-size:13px;color:#888;margin-top:4px">
+            ⏰ Начало: <b>${g.lessonStartTime||'—'}</b> &nbsp;·&nbsp;
+            Порог: <b>${g.lateMinutes} мин</b>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${esc(g.name)}')">📢 Рассылка</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
+          <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${esc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}','${esc(g.name)}')">Удалить</button>
+        </div>
+      </div>
+    </div>`).join('');
+  _refreshSelects();
+}
+
+async function addGroup() {
+  const name = document.getElementById('g-name').value.trim();
+  if (!name) { toast('Введите название группы','err'); return; }
+  await api('/api/groups',{method:'POST',body:JSON.stringify({
+    name, lessonStartTime: document.getElementById('g-start').value,
+    lateMinutes: Number(document.getElementById('g-late').value)||10,
+  })});
+  document.getElementById('g-name').value='';
+  toast('Группа создана ✅');
+  loadGroups();
+}
+async function editGroup(id,name,start,late) {
+  const newName=prompt('Название:',name); if(!newName) return;
+  const newStart=prompt('Начало урока (09:00):',start);
+  const newLate=prompt('Порог опоздания (мин):',late);
+  await api(`/api/groups/${id}`,{method:'PUT',body:JSON.stringify({name:newName,lessonStartTime:newStart||'',lateMinutes:Number(newLate)||10})});
+  toast('Группа обновлена ✅');
+  loadGroups();
+}
+async function deleteGroup(id,name) {
+  if (!confirm(`Удалить группу «${name}»?\nУченики не удалятся.`)) return;
+  await api(`/api/groups/${id}`,{method:'DELETE'});
+  toast('Группа удалена');
+  loadGroups();
+}
+async function duplicateGroup(id) {
+  const g = await api(`/api/groups/${id}/duplicate`,{method:'POST',body:'{}'});
+  toast(`Группа скопирована: ${g.name} ✅`);
+  loadGroups();
+}
+
+function broadcastGroup(id, name) {
+  _broadcastGrpId = id;
+  document.getElementById('bc-group-name').textContent = name;
+  document.getElementById('bc-message').value = '';
+  document.getElementById('bc-send-btn').onclick = sendBroadcast;
+  document.getElementById('broadcast-modal').classList.add('show');
+}
+async function sendBroadcast() {
+  const msg = document.getElementById('bc-message').value.trim();
+  if (!msg) { toast('Введите сообщение','err'); return; }
+  const r = await api(`/api/groups/${_broadcastGrpId}/broadcast`,{method:'POST',body:JSON.stringify({message:msg})});
+  closeModal('broadcast-modal');
+  toast(`Отправлено: ${r.sent} уведомлений ✅`);
+}
+
+// ════════════════════════════════════════════════════════════════
+// УЧЕНИКИ
+// ════════════════════════════════════════════════════════════════
+async function loadStudents(groupId) {
+  if (groupId !== undefined) _studentGrp = groupId || null;
+  _buildChips('student-chips', _studentGrp, gid => loadStudents(gid));
+
+  const search   = document.getElementById('student-search')?.value || '';
+  const archived = document.getElementById('show-archived')?.checked ? '1' : '0';
+  let url = '/api/students?archived='+archived;
+  if (_studentGrp) url += '&groupId='+_studentGrp;
+  if (search) url += '&search='+encodeURIComponent(search);
+
+  const students = await api(url);
+  const el = document.getElementById('students-list');
+
+  if (!Array.isArray(students)||!students.length) {
+    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:#aaa">
+      <div style="font-size:48px;margin-bottom:12px">👥</div>
+      <p style="font-size:16px">${search ? 'Ничего не найдено' : 'Учеников пока нет'}</p>
+      ${!search ? '<p style="font-size:13px;margin-top:8px">Добавьте первого ученика выше</p>' : ''}
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = students.map(s => {
+    const group = _groups.find(g => g.id === s.groupId);
+    const hasConsent = !!s.consentDate;
+    return `<div class="student-card ${!hasConsent?'no-consent':''}" style="${!s.isActive?'opacity:.55':''}">
+      <span class="consent-badge ${hasConsent?'consent-ok':'consent-no'}">${hasConsent?'✅ Согласие':'⚠️ Нет согласия'}</span>
+      <div class="avatar">${s.name[0].toUpperCase()}</div>
+      <h3>${esc(s.name)}${!s.isActive?' <span style="font-size:11px;color:#aaa">(архив)</span>':''}</h3>
+      <div class="meta">
+        ${s.parentPhone ? '📱 '+s.parentPhone : '<span style="color:#ddd">WhatsApp не указан</span>'}<br>
+        ${s.telegramChatId ? '📨 TG: '+s.telegramChatId : '<span style="color:#ddd">Telegram не подключён</span>'}<br>
+        ${s.parentEmail ? '📧 '+s.parentEmail : '<span style="color:#ddd">Email не указан</span>'}<br>
+        👤 ${esc(s.parentName)}
+        ${group ? '<br>🏫 '+esc(group.name) : ''}
+        ${s.consentDate ? '<br>📝 Согласие: '+s.consentDate : ''}
+      </div>
+      <div class="channels">
+        ${s.parentPhone ? '<span class="ch ch-wa">📱 WA</span>' : ''}
+        ${s.telegramChatId ? '<span class="ch ch-tg">📨 TG</span>' : ''}
+        ${s.parentEmail ? '<span class="ch" style="background:#fff3e0;color:#e65100">📧 Email</span>' : ''}
+      </div>
+      <div class="actions">
+        <button class="btn btn-outline btn-sm" onclick="showQR('${s.id}')">QR</button>
+        <button class="btn btn-outline btn-sm" onclick="editTG('${s.id}','${esc(s.telegramChatId||'')}')">📨 TG</button>
+        <button class="btn btn-outline btn-sm" onclick="manualMark('${s.id}','${esc(s.name)}')">✏️</button>
+        <button class="btn btn-outline btn-sm" onclick="openStudentModal('${s.id}')">⋯</button>
+      </div>
+      ${s.parentUrl ? '<div style="margin-top:8px"><a href="'+s.parentUrl+'" target="_blank" style="font-size:11px;color:#888">👨‍👩‍👧 Кабинет родителя ↗</a></div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addStudent() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('Введите имя ученика','err'); return; }
+  const btn = document.getElementById('add-btn');
+  btn.disabled = true; btn.textContent = 'Добавляю...';
+  try {
+    const s = await api('/api/students',{method:'POST',body:JSON.stringify({
+      name,
+      parentPhone:    document.getElementById('f-phone').value.trim(),
+      parentName:     document.getElementById('f-parent').value.trim() || 'Родитель',
+      parentEmail:    document.getElementById('f-email').value.trim(),
+      telegramChatId: document.getElementById('f-tg').value.trim(),
+      groupId:        document.getElementById('f-group').value,
+      consentDate:    document.getElementById('f-consent').value,
+    })});
+    if (s.error) { toast('Ошибка: '+s.error,'err'); return; }
+    ['f-name','f-phone','f-parent','f-email','f-tg','f-consent'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('f-group').value='';
+    toast(`${s.name} добавлен(а) ✅`);
+    loadStudents();
+    if (s.qrImage) openQRModal(s.name, s.qrImage, s.qrUrl);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Добавить ученика';
+  }
+}
+
+async function editTG(id, current) {
+  const val = prompt('Telegram chat_id (родитель пишет /start боту):', current);
+  if (val === null) return;
+  await api(`/api/students/${id}`,{method:'PUT',body:JSON.stringify({telegramChatId:val.trim()})});
+  toast('Telegram обновлён ✅');
+  loadStudents();
+}
+
+async function manualMark(id, name) {
+  const reason = confirm(`Отметить ${name} как «Болен»?\n\n[Отмена] = Уважительная причина`) ? 'sick' : 'valid';
+  await api(`/api/students/${id}/manual`,{method:'POST',body:JSON.stringify({reason})});
+  toast(`${name} отмечен(а): ${reason==='sick'?'🤒 Болен':'📝 Уваж. причина'}`);
+  loadAttendance();
+}
+
+async function openStudentModal(id) {
+  const s = _groups ? null : null;
+  document.getElementById('sm-name').textContent = '...';
+  document.getElementById('sm-content').innerHTML = 'Загрузка...';
+  document.getElementById('student-modal').classList.add('show');
+
+  const stats = await api(`/api/students/${id}/stats`);
+  const allS  = await api(`/api/students?archived=1`);
+  const st    = (allS||[]).find(s=>s.id===id) || {};
+  document.getElementById('sm-name').textContent = st.name || id;
+  const total  = stats.reduce((a,s)=>a+s.total,0);
+  const late   = stats.reduce((a,s)=>a+s.late,0);
+  document.getElementById('sm-content').innerHTML = `
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#2E5FA3">${total}</div><div style="font-size:11px;color:#aaa">ЗАНЯТИЙ</div></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#27ae60">${total-late}</div><div style="font-size:11px;color:#aaa">ВОВРЕМЯ</div></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#e53935">${late}</div><div style="font-size:11px;color:#aaa">ОПОЗДАНИЙ</div></div>
+    </div>
+    <div style="font-size:12px;color:#888">
+      📱 ${st.parentPhone||'нет'}<br>
+      📨 TG: ${st.telegramChatId||'нет'}<br>
+      📝 Согласие: ${st.consentDate||'⚠️ не получено'}
+    </div>`;
+
+  document.getElementById('sm-gdpr-btn').onclick = async () => {
+    if (!confirm(`ПОЛНОЕ удаление данных ${st.name}?\n\nЭто действие необратимо. Вся история посещаемости, телефон и Telegram будут удалены.`)) return;
+    await api(`/api/students/${id}/gdpr`,{method:'DELETE'});
+    closeModal('student-modal');
+    toast(`Данные ${st.name} полностью удалены (GDPR) ✅`);
+    loadStudents();
+  };
+  document.getElementById('sm-archive-btn').onclick = async () => {
+    await api(`/api/students/${id}/archive`,{method:'POST',body:'{}'});
+    closeModal('student-modal');
+    toast(`${st.name} архивирован`);
+    loadStudents();
+  };
+}
+
+// Импорт CSV/Excel (парсим на фронте)
+async function importStudents(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const lines = text.split('\n').filter(l=>l.trim());
+  const students = [];
+  for (const line of lines.slice(1)) { // пропускаем заголовок
+    const cols = line.split(',').map(c=>c.replace(/^"|"$/g,'').trim());
+    if (cols[0]) students.push({ name:cols[0], parentPhone:cols[1]||'', parentName:cols[2]||'Родитель', telegramChatId:cols[3]||'' });
+  }
+  if (!students.length) { toast('Нет данных для импорта','err'); return; }
+  const groupId = document.getElementById('f-group').value;
+  const res = await api('/api/students/import',{method:'POST',body:JSON.stringify({students, groupId})});
+  const ok = (res||[]).filter(r=>r.ok).length;
+  toast(`Импортировано: ${ok} из ${students.length} ✅`);
+  loadStudents();
+  input.value='';
+}
+
+// ════════════════════════════════════════════════════════════════
+// ПОСЕЩАЕМОСТЬ
+// ════════════════════════════════════════════════════════════════
+async function loadAttendance(groupId) {
+  if (groupId !== undefined) _attGrp = groupId || null;
+  _buildChips('att-chips', _attGrp, gid => loadAttendance(gid));
+
+  let url = '/api/attendance';
+  const params = [];
+  if (_attGrp) params.push('groupId='+_attGrp);
+  const from = document.getElementById('att-from')?.value;
+  const to   = document.getElementById('att-to')?.value;
+  if (from) params.push('from='+from);
+  if (to)   params.push('to='+to);
+  if (params.length) url += '?'+params.join('&');
+
+  const rows = await api(url);
+  const body = document.getElementById('att-body');
+  if (!Array.isArray(rows)||!rows.length) {
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:32px">Записей нет</td></tr>'; return;
+  }
+  body.innerHTML = rows.map(r => {
+    const d   = new Date(r.time);
+    const dt  = d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+    const tm  = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const st  = r.reason==='sick' ? `<span class="badge b-sick">🤒 Болен</span>`
+               : r.reason==='valid' ? `<span class="badge b-valid">📝 Уваж. причина</span>`
+               : r.isLate ? `<span class="badge b-late">⚠️ +${r.minutesLate}мин</span>`
+               : `<span class="badge b-ok">✅ Вовремя</span>`;
+    return `<tr><td>${esc(r.studentName)}</td><td>${esc(r.groupName||'—')}</td><td>${dt}</td><td>${tm}</td><td>${st}</td></tr>`;
+  }).join('');
+}
+
+function exportExcel() {
+  let url = '/api/attendance/export';
+  const params = [];
+  if (_attGrp) params.push('groupId='+_attGrp);
+  const from = document.getElementById('att-from')?.value;
+  const to   = document.getElementById('att-to')?.value;
+  if (from) params.push('from='+from);
+  if (to)   params.push('to='+to);
+  if (params.length) url += '?'+params.join('&');
+  window.location.href = url;
+}
+
+// Сортировка таблицы
+function sortTable(tbodyId, colIdx) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const asc = _attSortCol===colIdx ? !_attSortAsc : true;
+  _attSortCol=colIdx; _attSortAsc=asc;
+  rows.sort((a,b) => {
+    const va = a.cells[colIdx]?.textContent||'';
+    const vb = b.cells[colIdx]?.textContent||'';
+    return asc ? va.localeCompare(vb,'ru') : vb.localeCompare(va,'ru');
+  });
+  rows.forEach(r => tbody.appendChild(r));
+  document.querySelectorAll('th').forEach((th,i) => {
+    th.className = i===colIdx ? (asc?'sort-asc':'sort-desc') : '';
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// СТАТИСТИКА
+// ════════════════════════════════════════════════════════════════
+async function initStats() {
+  const students = await api('/api/students');
+  const sel = document.getElementById('stats-student');
+  sel.innerHTML = '<option value="">— выберите ученика —</option>' +
+    (students||[]).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+}
+
+async function loadStats() {
+  const id = document.getElementById('stats-student').value;
+  if (!id) { toast('Выберите ученика','err'); return; }
+  const stats = await api(`/api/students/${id}/stats`);
+  const el = document.getElementById('stats-result');
+  if (!Array.isArray(stats)||!stats.length) {
+    el.innerHTML='<div class="card" style="text-align:center;color:#aaa;padding:40px">Данных пока нет</div>'; return;
+  }
+  const total = stats.reduce((a,s)=>a+s.total,0);
+  const late  = stats.reduce((a,s)=>a+s.late,0);
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:16px">
+      <div class="stat-summary">
+        <div class="s"><div class="sn" style="color:#2E5FA3">${total}</div><div class="sl">Всего</div></div>
+        <div class="s"><div class="sn" style="color:#27ae60">${total-late}</div><div class="sl">Вовремя</div></div>
+        <div class="s"><div class="sn" style="color:#e53935">${late}</div><div class="sl">Опозданий</div></div>
+        <div class="s"><div class="sn" style="color:#f39c12">${total?Math.round((1-late/total)*100):0}%</div><div class="sl">Точность</div></div>
+      </div>
+    </div>
+    <div class="stats-grid">${stats.map(s=>`
+      <div class="stat-card">
+        <div class="month">${s.month}</div>
+        <div class="num">${s.total}</div>
+        <div style="font-size:11px;color:#27ae60;margin-top:4px">✅ ${s.onTime}</div>
+        ${s.late?`<div style="font-size:11px;color:#e53935;margin-top:2px">⚠️ ${s.late}</div>`:''}
+      </div>`).join('')}
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════
+// ПЕЧАТЬ QR
+// ════════════════════════════════════════════════════════════════
+async function loadPrintQR(groupId) {
+  if (groupId !== undefined) _printGrp = groupId || null;
+  _buildChips('print-chips', _printGrp, gid => loadPrintQR(gid));
+  const url = '/api/print-all' + (_printGrp ? '?groupId='+_printGrp : '');
+  const students = await api(url);
+  const el = document.getElementById('print-grid');
+  if (!students?.length) { el.innerHTML='<p style="color:#aaa;padding:24px">Нет учеников</p>'; return; }
+  el.innerHTML = students.map(s=>`
+    <div class="qr-card">
+      <img src="${s.qrImage}" style="width:170px;cursor:pointer" onclick="openQRModal('${esc(s.name)}','${s.qrImage}','${s.url}')">
+      <h3>${esc(s.name)}</h3>
+      <p>${s.url}</p>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+// QR модалка
+// ════════════════════════════════════════════════════════════════
+async function showQR(id) {
+  const d = await api(`/api/students/${id}/qr`);
+  openQRModal(d.student.name, d.qrImage, d.url);
+}
+function openQRModal(name,img,url) {
+  document.getElementById('qr-name').textContent = name;
+  document.getElementById('qr-img').src = img;
+  document.getElementById('qr-url').textContent = url;
+  document.getElementById('qr-modal').classList.add('show');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function printSingleQR() {
+  const img=document.getElementById('qr-img').src;
+  const name=document.getElementById('qr-name').textContent;
+  const w=window.open('','_blank');
+  w.document.write(`<html><body style="text-align:center;font-family:sans-serif;padding:40px">
+    <h2>${name}</h2><img src="${img}" style="width:280px"><script>window.print();window.close()<\/script></body></html>`);
+}
+
+// ════════════════════════════════════════════════════════════════
+// WHATSAPP
+// ════════════════════════════════════════════════════════════════
+async function loadWAStatus() {
+  const r = await api('/api/whatsapp/status');
+  const states = {
+    authorized:    { cls:'ready', label:'Подключён ✅' },
+    notAuthorized: { cls:'warn',  label:'Нужна авторизация ⚠️' },
+    error:         { cls:'err',   label:'Ошибка ❌' },
+  };
+  const { cls='', label='Инициализация...' } = states[r.state] || {};
+  ['wa-dot','wa-dot2'].forEach(id => { const d=document.getElementById(id); if(d) d.className='dot '+cls; });
+  document.getElementById('wa-text').textContent = 'WA: '+label;
+  const sl = document.getElementById('wa-status-label');
+  if (sl) sl.textContent = label;
+
+  const det = document.getElementById('wa-detail');
+  if (det) {
+    det.innerHTML = r.state==='notAuthorized'
+      ? '❗ Зайдите на <b>green-api.com</b> → инстанс → «Сканировать QR» → подключите WhatsApp'
+      : r.state==='error'
+      ? '❗ Проверьте <code>GREEN_API_INSTANCE_ID</code> и <code>GREEN_API_TOKEN</code> в <code>.env</code>'
+      : 'Green API работает нормально';
+  }
+  document.getElementById('ws-sent').textContent  = r.sent    ?? '—';
+  document.getElementById('ws-fail').textContent  = r.failed  ?? '—';
+  document.getElementById('ws-queue').textContent = r.pending ?? 0;
+
+  const logs = await api('/api/whatsapp/log');
+  const body = document.getElementById('wa-log-body');
+  const meta = { sent:{cls:'b-ok',lbl:'✅ Отправлено'}, queued:{cls:'b-q',lbl:'⏳ В очереди'}, retry:{cls:'b-warn',lbl:'🔄 Повтор'}, failed:{cls:'b-err',lbl:'❌ Ошибка'} };
+  body.innerHTML = (logs||[]).length ? (logs||[]).map(l=>{
+    const m=meta[l.status]||{cls:'',lbl:l.status};
+    const t=new Date(l.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    return `<tr class="${l.status==='sent'?'log-sent':l.status==='failed'?'log-err':'log-q'}">
+      <td style="color:#888;font-size:12px">${t}</td>
+      <td><span class="badge ${m.cls}">${m.lbl}</span></td>
+      <td style="font-size:12px">${esc(l.note||'')}</td></tr>`;
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">Сообщений пока нет</td></tr>';
+}
+
+async function sendTestWA() {
+  const phone = document.getElementById('wa-test-phone').value.trim();
+  if (!phone) { toast('Введите номер телефона','err'); return; }
+  const r = await api('/api/whatsapp/test',{method:'POST',body:JSON.stringify({phone})});
+  r.error ? toast('Ошибка: '+r.error,'err') : toast('Тестовое сообщение отправлено ✅');
+}
+
+// ════════════════════════════════════════════════════════════════
+// TELEGRAM
+// ════════════════════════════════════════════════════════════════
+async function loadTGStatus() {
+  const r = await api('/api/telegram/status');
+  const dot=document.getElementById('tg-dot'), lbl=document.getElementById('tg-status-label');
+  const mode=document.getElementById('tg-mode');
+  if (r.enabled && r.ready) {
+    dot.className='dot ready'; lbl.textContent=`@${r.botName} ✅`;
+    mode.textContent = r.mode==='webhook' ? '⚡ Режим: Webhook (рекомендуется)' : '🔄 Режим: Long Polling (localhost)';
+  } else {
+    dot.className='dot err'; lbl.textContent='Не настроен ❌';
+    mode.textContent = r.reason || 'Укажите TELEGRAM_BOT_TOKEN в .env';
+  }
+}
+
+async function sendTestTG() {
+  const chatId = document.getElementById('tg-test-id').value.trim();
+  if (!chatId) { toast('Введите chat_id','err'); return; }
+  const r = await api('/api/telegram/test',{method:'POST',body:JSON.stringify({chatId})});
+  r.error ? toast('Ошибка: '+r.error,'err') : toast('Тестовое сообщение отправлено ✅');
+}
+
+// ════════════════════════════════════════════════════════════════
+// АУДИТ
+// ════════════════════════════════════════════════════════════════
+async function loadAudit() {
+  const rows = await api('/api/audit');
+  const body = document.getElementById('audit-body');
+  if (!Array.isArray(rows)||!rows.length) {
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px">Действий пока нет</td></tr>'; return;
+  }
+  const actionLabels = {
+    create:'➕ Создание', update:'✏️ Изменение', delete:'🗑 Удаление',
+    archive:'📦 Архив', gdpr_delete:'⚠️ GDPR удаление',
+    scan:'📱 Скан', manual:'✏️ Ручная отметка',
+    test_wa:'🧪 Тест WA', test_tg:'🧪 Тест TG',
+    broadcast:'📢 Рассылка', import:'📥 Импорт',
+    cleanup:'🧹 Очистка', duplicate:'📋 Копия',
+  };
+  body.innerHTML = rows.map(r => {
+    const t = new Date(r.time).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const lbl = actionLabels[r.action] || r.action;
+    return `<tr>
+      <td style="color:#888;font-size:12px;white-space:nowrap">${t}</td>
+      <td><span class="audit-action">${lbl}</span></td>
+      <td style="font-size:12px">${esc(r.entity)}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(r.details||'')}</td>
+      <td style="font-size:12px;color:#aaa">${r.ip||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+// ХЕЛПЕРЫ
+// ════════════════════════════════════════════════════════════════
+function _buildChips(containerId, currentId, onChange) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = [
+    `<div class="chip ${!currentId?'active':''}" onclick="(${onChange.toString()})('')">Все</div>`,
+    ..._groups.map(g=>`<div class="chip ${currentId===g.id?'active':''}" onclick="(${onChange.toString()})('${g.id}')">${esc(g.name)}</div>`)
+  ].join('');
+}
+
+async function _refreshSelects() {
+  const sel = document.getElementById('f-group');
+  if (sel) sel.innerHTML='<option value="">— без группы —</option>'+_groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+
+// ════════════════════════════════════════════════════════════════
+// EMAIL
+// ════════════════════════════════════════════════════════════════
+async function loadEmailStatus() {
+  const r = await api('/api/email/status');
+  const dot = document.getElementById('em-dot');
+  const lbl = document.getElementById('em-status-label');
+  const det = document.getElementById('em-detail');
+  if (r.ready) {
+    if (dot) dot.className = 'dot ready';
+    if (lbl) lbl.textContent = 'Подключён ✅';
+    if (det) det.innerHTML = `📧 Сервер: <b>${r.host}</b> · Аккаунт: <b>${r.user}</b>`;
+  } else {
+    if (dot) dot.className = 'dot err';
+    if (lbl) lbl.textContent = 'Не настроен ❌';
+    if (det) det.innerHTML = 'Добавьте SMTP_HOST, SMTP_USER, SMTP_PASS в <code>.env</code>';
+  }
+}
+
+async function sendTestEmail() {
+  const email = document.getElementById('em-test-addr').value.trim();
+  if (!email) { toast('Введите email', 'err'); return; }
+  const r = await api('/api/email/test', { method: 'POST', body: JSON.stringify({ email }) });
+  r.error ? toast('Ошибка: ' + r.error, 'err') : toast('Письмо отправлено ✅');
+}
+
+// ════════════════════════════════════════════════════════════════
+// ОШИБКИ
+// ════════════════════════════════════════════════════════════════
+async function loadErrors() {
+  const rows = await api('/api/error-log');
+  const body = document.getElementById('errors-body');
+  if (!Array.isArray(rows) || !rows.length) {
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#27ae60;padding:24px">✅ Ошибок нет</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(r => {
+    const t = r.time ? new Date(r.time).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+    return `<tr>
+      <td style="color:#888;font-size:12px;white-space:nowrap">${t}</td>
+      <td style="font-size:12px;color:#c62828;max-width:300px;overflow:hidden;text-overflow:ellipsis">${esc(r.msg || '')}</td>
+      <td style="font-size:12px;color:#888">${esc(r.url || '—')}</td>
+      <td style="font-size:12px;color:#aaa">${esc(r.ip || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+// АВТООБНОВЛЕНИЕ + ИНИЦИАЛИЗАЦИЯ
+// ════════════════════════════════════════════════════════════════
+setInterval(() => api('/api/whatsapp/status').then(r => {
+  const c=r.state==='authorized'?'ready':r.state==='error'?'err':'warn';
+  const d=document.getElementById('wa-dot'); if(d) d.className='dot '+c;
+  document.getElementById('wa-text').textContent='WA: '+(r.state==='authorized'?'Подключён ✅':r.state==='notAuthorized'?'⚠️ Авториз.':'⚠️');
+}), 10000);
+
+// Старт
+(async () => {
+  _groups = await api('/api/groups');
+  await _refreshSelects();
+  showTab('dashboard');
+})();
+</script>
+</body>
+</html>

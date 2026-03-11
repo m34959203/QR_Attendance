@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2E5FA3">
+<title>Помощь — QR Посещаемость</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f7fa;color:#333;line-height:1.7}
+.wrap{max-width:720px;margin:0 auto;padding:40px 24px}
+header{background:linear-gradient(135deg,#667eea,#764ba2);padding:32px 24px;border-radius:20px;margin-bottom:32px;text-align:center}
+header h1{color:#fff;font-size:26px;margin-bottom:8px}
+header p{color:rgba(255,255,255,.85);font-size:15px}
+.card{background:#fff;border-radius:16px;padding:28px 32px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+h2{font-size:18px;color:#2E5FA3;margin-bottom:16px}
+.step{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+.step-num{width:36px;height:36px;border-radius:50%;background:#2E5FA3;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;margin-top:2px}
+.step-body h3{font-size:16px;margin-bottom:6px;color:#1a1a2e}
+.step-body p{font-size:14px;color:#555;margin:0}
+.icon-row{font-size:48px;text-align:center;margin:20px 0}
+.highlight{background:#e8f5e9;border-left:4px solid #27ae60;padding:14px 18px;border-radius:8px;margin:16px 0;font-size:14px;color:#2e7d32}
+.warn{background:#fff3e0;border-left:4px solid #f39c12;padding:14px 18px;border-radius:8px;margin:16px 0;font-size:14px;color:#7a4f00}
+.faq-item{margin-bottom:20px}
+.faq-q{font-weight:700;font-size:15px;color:#1a1a2e;margin-bottom:6px}
+.faq-a{font-size:14px;color:#555}
+code{background:#f0f0f0;padding:2px 7px;border-radius:5px;font-family:monospace;font-size:13px}
+footer{text-align:center;margin-top:32px;font-size:13px;color:#aaa}
+footer a{color:#2E5FA3;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>📱 Помощь для родителей</h1>
+  <p>Как работает система уведомлений о посещаемости</p>
+</header>
+
+<div class="card">
+  <h2>Как это работает</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body"><h3>QR-код у входа</h3><p>У входа в учебный класс висит распечатанный QR-код с именем ученика.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body"><h3>Ученик сканирует</h3><p>Ученик наводит камеру телефона на QR-код. Телефон предлагает открыть ссылку — нажать «Открыть».</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><h3>Система фиксирует время</h3><p>Страница подтверждает приход и показывает время. Устанавливать приложение не нужно.</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body"><h3>Вы получаете уведомление</h3><p>На ваш WhatsApp или Telegram приходит сообщение с именем ребёнка и временем прихода.</p></div>
+  </div>
+
+  <div class="highlight">✅ Всё происходит автоматически. Ничего устанавливать не нужно.</div>
+</div>
+
+<div class="card">
+  <h2>Подключить Telegram-уведомления</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body"><h3>Найдите бота</h3><p>Учитель даст вам ссылку или имя Telegram-бота (начинается с @).</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body"><h3>Напишите /start</h3><p>Откройте бота и отправьте команду <code>/start</code>. Бот ответит вашим кодом (chat_id).</p></div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><h3>Передайте код учителю</h3><p>Сообщите учителю ваш код — он привяжет его к карточке ученика. После этого уведомления будут приходить в Telegram.</p></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Часто задаваемые вопросы</h2>
+
+  <div class="faq-item">
+    <div class="faq-q">📲 Почему я не получаю уведомления?</div>
+    <div class="faq-a">Проверьте: 1) ученик сканировал QR-код? 2) уведомления от WhatsApp не заблокированы? 3) верно ли указан номер — обратитесь к учителю для проверки.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">⚠️ Что значит «опоздание»?</div>
+    <div class="faq-a">Если ученик сканировал QR позже установленного времени начала урока, в уведомлении будет указано время опоздания в минутах.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">🔒 Мои данные в безопасности?</div>
+    <div class="faq-a">Мы храним только то, что необходимо для уведомлений: имя ребёнка, ваш номер/Telegram. Данные не передаются рекламным сетям. Подробнее — в <a href="/privacy">Политике конфиденциальности</a>.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">🚫 Как отписаться от уведомлений?</div>
+    <div class="faq-a">Telegram: напишите боту команду <code>/stop</code>. WhatsApp: обратитесь к учителю для удаления номера из системы.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">🗑 Как удалить данные ребёнка?</div>
+    <div class="faq-a">Обратитесь к учителю с просьбой об удалении. Все данные — история посещаемости, номер, Telegram — будут полностью удалены из системы.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">📱 У ученика нет смартфона — как быть?</div>
+    <div class="faq-a">Учитель может вручную отметить присутствие через панель управления.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="warn">
+    Остались вопросы? Обратитесь напрямую к учителю или администратору учебного центра.
+  </div>
+</div>
+
+<footer>
+  <a href="/privacy">Политика конфиденциальности</a>
+</footer>
+
+</div>
+</body>
+</html>
