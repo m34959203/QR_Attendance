@@ -83,6 +83,12 @@ function _migrate() {
   _col('students',   'parentEmail',    'TEXT DEFAULT ""');
   _col('students',   'telegramStopAt', 'TEXT DEFAULT ""');
   _col('attendance', 'reason',         'TEXT DEFAULT ""');
+
+  // Индексы для производительности
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_studentId ON attendance(studentId)'); } catch {}
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_time ON attendance(time)'); } catch {}
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_groupId ON attendance(groupId)'); } catch {}
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_students_groupId ON students(groupId)'); } catch {}
 }
 
 function _col(tbl, col, def) {
@@ -202,9 +208,13 @@ function getOrCreateParentToken(studentId) {
   return s ? s.id.replace(/-/g, '').slice(0, 12) : null;
 }
 
-// Найти ученика по токену
+// Найти ученика по токену (первые 12 hex ID без дефисов)
 function findStudentByToken(token) {
-  const students = getStudents(null, true);
+  if (!token || token.length !== 12) return null;
+  // UUID без дефисов: первые 12 символов = первые 8 + 4 из второго блока
+  // Восстанавливаем паттерн: xxxxxxxx-xxxx (token = 8+4 hex)
+  const prefix = token.slice(0, 8) + '-' + token.slice(8, 12);
+  const students = _all('SELECT * FROM students WHERE id LIKE ?', [prefix + '%']);
   return students.find(s => s.id.replace(/-/g, '').slice(0, 12) === token) || null;
 }
 
@@ -326,11 +336,25 @@ function autoCleanup(retentionYears) {
   return n;
 }
 
-function _calcLate(t) {
-  const [hh, mm] = t.split(':').map(Number);
+function _calcLate(lessonTime) {
+  const [hh, mm] = lessonTime.split(':').map(Number);
   if (isNaN(hh)) return 0;
-  const s = new Date(); s.setHours(hh, mm, 0, 0);
-  return Math.max(0, Math.floor((Date.now() - s.getTime()) / 60000));
+  // Получаем текущие часы и минуты в часовом поясе школы
+  const config = require('./config');
+  const now = new Date();
+  let nowH, nowM;
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: config.TIMEZONE, hour: 'numeric', minute: 'numeric', hour12: false,
+    }).formatToParts(now);
+    nowH = Number(parts.find(p => p.type === 'hour').value);
+    nowM = Number(parts.find(p => p.type === 'minute').value);
+  } catch {
+    nowH = now.getHours();
+    nowM = now.getMinutes();
+  }
+  const diff = (nowH * 60 + nowM) - (hh * 60 + mm);
+  return Math.max(0, diff);
 }
 
 module.exports = {
