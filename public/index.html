@@ -208,7 +208,6 @@ tr:hover td{background:#fafbfd}
   <div class="tab" onclick="showTab('groups')">🏫 Группы</div>
   <div class="tab" onclick="showTab('attendance')">📋 Журнал</div>
   <div class="tab" onclick="showTab('stats')">📈 Статистика</div>
-  <div class="tab" onclick="showTab('print')">🖨 Печать QR</div>
   <div class="tab" onclick="showTab('whatsapp')">📱 WhatsApp</div>
   <div class="tab" onclick="showTab('telegram')">📨 Telegram</div>
   <div class="tab" onclick="showTab('audit')">🔍 Аудит</div>
@@ -360,18 +359,6 @@ tr:hover td{background:#fafbfd}
     </div>
   </div>
   <div id="stats-result"></div>
-</div>
-
-<!-- ══════════════════════════════ ПЕЧАТЬ QR ══════════════════════════════ -->
-<div id="tab-print" style="display:none">
-  <div class="card no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div class="chips" id="print-chips" style="margin:0"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-outline" onclick="printConsentForm()">📝 Бланк согласия ПД</button>
-      <button class="btn btn-primary" onclick="window.print()">🖨 Распечатать все</button>
-    </div>
-  </div>
-  <div id="print-grid" class="print-grid"></div>
 </div>
 
 <!-- ══════════════════════════════ WHATSAPP ══════════════════════════════ -->
@@ -536,7 +523,7 @@ tr:hover td{background:#fafbfd}
 <!-- Тост -->
 <div class="toast" id="toast"></div>
 
-<!-- Модалка QR -->
+<!-- Модалка QR группы -->
 <div class="modal" id="qr-modal">
   <div class="modal-box">
     <h2 id="qr-name"></h2>
@@ -544,7 +531,6 @@ tr:hover td{background:#fafbfd}
     <img id="qr-img" src="" alt="QR">
     <p class="modal-url" id="qr-url"></p>
     <div class="modal-actions">
-      <button class="btn btn-primary btn-sm" onclick="printSingleQR()">🖨 Печать</button>
       <button class="btn btn-outline btn-sm" onclick="closeModal('qr-modal')">Закрыть</button>
     </div>
   </div>
@@ -580,11 +566,10 @@ tr:hover td{background:#fafbfd}
 // ════════════════════════════════════════════════════════════════
 // СОСТОЯНИЕ
 // ════════════════════════════════════════════════════════════════
-const TABS = ['dashboard','students','groups','attendance','stats','print','whatsapp','telegram','audit','email','errors'];
+const TABS = ['dashboard','students','groups','attendance','stats','whatsapp','telegram','audit','email','errors'];
 let _groups        = [];
 let _studentGrp    = null;
 let _attGrp        = null;
-let _printGrp      = null;
 let _attSortCol    = -1;
 let _attSortAsc    = true;
 let _broadcastGrpId = null;
@@ -603,7 +588,6 @@ function showTab(name) {
     groups:    loadGroups,
     attendance:loadAttendance,
     stats:     initStats,
-    print:     loadPrintQR,
     whatsapp:  loadWAStatus,
     telegram:  loadTGStatus,
     audit:     loadAudit,
@@ -838,7 +822,6 @@ async function loadStudents(groupId) {
         ${s.parentEmail ? '<span class="ch" style="background:#fff3e0;color:#e65100">📧 Email</span>' : ''}
       </div>
       <div class="actions">
-        <button class="btn btn-outline btn-sm" onclick="showQR('${s.id}')">QR</button>
         <button class="btn btn-outline btn-sm" onclick="editTG('${s.id}','${esc(s.telegramChatId||'')}')">📨 TG</button>
         <button class="btn btn-outline btn-sm" onclick="manualMark('${s.id}','${esc(s.name)}')">✏️</button>
         <button class="btn btn-outline btn-sm" onclick="openStudentModal('${s.id}')">⋯</button>
@@ -867,9 +850,8 @@ async function addStudent() {
     if (s.error) { toast('Ошибка: '+s.error,'err'); return; }
     ['f-name','f-phone','f-parent','f-email','f-tg','f-consent'].forEach(id => document.getElementById(id).value='');
     document.getElementById('f-group').value='';
-    toast(`${s.name} добавлен(а) ✅`);
+    toast(`${s.name} добавлен(а) ✅ PIN: ${s.pin}`);
     loadStudents();
-    if (s.qrImage) openQRModal(s.name, s.qrImage, s.qrUrl);
   } finally {
     btn.disabled = false; btn.textContent = 'Добавить ученика';
   }
@@ -1052,46 +1034,10 @@ async function loadStats() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// ПЕЧАТЬ QR
 // ════════════════════════════════════════════════════════════════
-async function loadPrintQR(groupId) {
-  if (groupId !== undefined) _printGrp = groupId || null;
-  _buildChips('print-chips', _printGrp, gid => loadPrintQR(gid));
-  const url = '/api/print-all' + (_printGrp ? '?groupId='+_printGrp : '');
-  const students = await api(url);
-  const el = document.getElementById('print-grid');
-  if (!students?.length) { el.innerHTML='<p style="color:#aaa;padding:24px">Нет учеников</p>'; return; }
-  el.innerHTML = students.map(s=>`
-    <div class="qr-card">
-      <img src="${s.qrImage}" style="width:170px;cursor:pointer" onclick="openQRModal('${esc(s.name)}','${s.qrImage}','${s.url}')">
-      <h3>${esc(s.name)}</h3>
-      <p>${s.url}</p>
-    </div>`).join('');
-}
-
+// QR модалка (группы)
 // ════════════════════════════════════════════════════════════════
-// QR модалка
-// ════════════════════════════════════════════════════════════════
-async function showQR(id) {
-  const d = await api(`/api/students/${id}/qr`);
-  openQRModal(d.student.name, d.qrImage, d.url);
-}
-function openQRModal(name,img,url) {
-  document.getElementById('qr-name').textContent = name;
-  document.getElementById('qr-img').src = img;
-  document.getElementById('qr-url').textContent = url;
-  const pinsEl = document.getElementById('qr-pins');
-  if (pinsEl) pinsEl.innerHTML = '';
-  document.getElementById('qr-modal').classList.add('show');
-}
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-function printSingleQR() {
-  const img=document.getElementById('qr-img').src;
-  const name=document.getElementById('qr-name').textContent;
-  const w=window.open('','_blank');
-  w.document.write(`<html><body style="text-align:center;font-family:sans-serif;padding:40px">
-    <h2>${name}</h2><img src="${img}" style="width:280px"><script>window.print();window.close()<\/script></body></html>`);
-}
 
 async function showGroupQR(groupId) {
   const d = await api(`/api/groups/${groupId}/qr`);

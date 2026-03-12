@@ -146,71 +146,7 @@ app.use(express.static('public'));
 });
 
 // ═══════════════════════════════════════════════════
-// QR СКАНИРОВАНИЕ
-// ═══════════════════════════════════════════════════
-app.get('/scan/:studentId', scanLimiter, async (req, res) => {
-  try {
-    const student = db.findStudent(req.params.studentId);
-    if (!student || !student.isActive) {
-      return res.send(scanPage('Ошибка', `<div class="icon">❌</div><h2>QR-код не найден</h2><p>Обратитесь к учителю</p>`));
-    }
-
-    // Защита от двойного скана (10 мин)
-    const last = db.getLastAttendance(student.id);
-    if (last && (Date.now() - new Date(last.time).getTime()) < 10 * 60000) {
-      return res.send(scanPage('Уже отмечен', `
-        <div class="icon">✅</div><h2>${esc(student.name)}</h2>
-        <p class="already">Уже отмечены сегодня</p>
-        <p class="time">Приход: <strong>${fmt(last.time)}</strong></p>`));
-    }
-
-    const record = db.addAttendance(student.id);
-    const time   = fmt(record.time);
-    const date   = fmtDate(record.time);
-    const school = config.SCHOOL_NAME;
-    const lateNote  = record.isLate ? `\n⚠️ Опоздание: ${record.minutesLate} мин` : '';
-
-    // WhatsApp
-    if (student.parentPhone) {
-      const waText = `[${school}]\n👋 Здравствуйте, ${student.parentName}!\n\n✅ ${student.name} пришёл(а) на урок.\n🕐 ${time}\n📅 ${date}${lateNote}`;
-      wa.send(student.parentPhone, waText, student.name);
-    }
-
-    // Telegram (только если не отписан)
-    if (student.telegramChatId && !student.telegramStopAt) {
-      const late = record.isLate ? `\n⚠️ Опоздание: <b>${record.minutesLate} мин</b>` : '';
-      const tgText = `[<b>${esc(school)}</b>]\n👋 ${esc(student.parentName)},\n\n${record.isLate?'⚠️':'✅'} <b>${esc(student.name)}</b> пришёл(а).\n🕐 <b>${time}</b>\n📅 ${date}${late}`;
-      tg.sendMessage(student.telegramChatId, tgText).catch(e => logError('TG: ' + e.message));
-    }
-
-    // Email
-    if (student.parentEmail) {
-      em.sendArrival({
-        to: student.parentEmail, parentName: student.parentName,
-        studentName: student.name, time, date, school,
-        isLate: record.isLate, minutesLate: record.minutesLate,
-      }).catch(e => logError('Email: ' + e.message));
-    }
-
-    db.audit('scan', 'attendance', record.id,
-      `${student.name} — ${time}${record.isLate ? ' (опоздание)' : ''}`,
-      req.headers['x-forwarded-for'] || req.socket.remoteAddress || '');
-
-    res.send(scanPage('Добро пожаловать!', `
-      <div class="icon">${record.isLate ? '⏰' : '🎓'}</div>
-      <h2>${esc(student.name)}</h2>
-      <p class="school">${esc(school)}</p>
-      <p class="time">Приход: <strong>${time}</strong></p>
-      ${record.isLate ? `<p class="late">⚠️ Опоздание: ${record.minutesLate} мин</p>` : ''}
-      <p class="wa-ok">📨 Уведомление отправлено</p>`));
-  } catch (e) {
-    logError(e.message, req);
-    res.status(500).send(scanPage('Ошибка', `<div class="icon">⚠️</div><p>Временная ошибка. Попробуйте ещё раз.</p>`));
-  }
-});
-
-// ═══════════════════════════════════════════════════
-// ГРУППОВОЕ СКАНИРОВАНИЕ (QR группы + PIN ученика)
+// QR СКАНИРОВАНИЕ (QR группы + PIN ученика)
 // ═══════════════════════════════════════════════════
 app.get('/g/:groupId', scanLimiter, (req, res) => {
   const group = db.findGroup(req.params.groupId);
@@ -439,15 +375,14 @@ app.get('/api/students', (req, res) => {
   } catch (e) { logError('students: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/students', async (req, res) => {
+app.post('/api/students', (req, res) => {
   const errs = validateStudent(req.body);
   if (errs) return res.status(400).json({ error: errs[0], errors: errs });
   const { name, parentPhone, parentName, parentEmail, telegramChatId, groupId, consentDate } = req.body;
-  const s   = db.addStudent({ name: name.trim(), parentPhone, parentName, parentEmail, telegramChatId, groupId, consentDate });
-  const url = `${config.BASE_URL}/scan/${s.id}`;
+  const s = db.addStudent({ name: name.trim(), parentPhone, parentName, parentEmail, telegramChatId, groupId, consentDate });
   const parentUrl = `${config.BASE_URL}/parent/${db.getOrCreateParentToken(s.id)}`;
   db.audit('create', 'student', s.id, s.name, req.adminIp);
-  res.json({ ...s, qrImage: await QRCode.toDataURL(url, { width: 300, margin: 2 }), qrUrl: url, parentUrl });
+  res.json({ ...s, parentUrl });
 });
 
 app.put('/api/students/:id', (req, res) => {
@@ -478,12 +413,6 @@ app.delete('/api/students/:id/gdpr', (req, res) => {
   res.json({ ok: true, deleted: s?.name });
 });
 
-app.get('/api/students/:id/qr', async (req, res) => {
-  const s = db.findStudent(req.params.id);
-  if (!s) return res.status(404).json({ error: 'Не найден' });
-  const url = `${config.BASE_URL}/scan/${s.id}`;
-  res.json({ qrImage: await QRCode.toDataURL(url, { width: 300, margin: 2 }), url, student: s });
-});
 
 app.get('/api/students/:id/stats', (req, res) => {
   res.json(db.getStudentStats(req.params.id, 6));
@@ -570,19 +499,8 @@ app.get('/api/attendance/export', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════
-// API: ПЕЧАТЬ QR
+// API: QR ГРУППЫ
 // ═══════════════════════════════════════════════════
-app.get('/api/print-all', async (req, res) => {
-  const students = db.getStudents(req.query.groupId || null);
-  const result = [];
-  for (const s of students) {
-    const url = `${config.BASE_URL}/scan/${s.id}`;
-    result.push({ ...s, qrImage: await QRCode.toDataURL(url, { width: 250, margin: 2 }), url });
-  }
-  res.json(result);
-});
-
-// QR группы — один QR для всего класса
 app.get('/api/groups/:id/qr', async (req, res) => {
   const group = db.findGroup(req.params.id);
   if (!group) return res.status(404).json({ error: 'Группа не найдена' });
