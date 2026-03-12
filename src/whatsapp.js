@@ -40,6 +40,7 @@ async function _initGreenAPI() {
   client = new GreenAPI({
     instanceId:    config.GREEN_API_INSTANCE_ID,
     instanceToken: config.GREEN_API_TOKEN,
+    apiUrl:        config.GREEN_API_URL,
   });
 
   const res = await client.getStateInstance();

@@ -14,6 +14,7 @@ module.exports = {
   WA_PROVIDER:              env.WA_PROVIDER || 'greenapi',
   GREEN_API_INSTANCE_ID:    env.GREEN_API_INSTANCE_ID || '',
   GREEN_API_TOKEN:          env.GREEN_API_TOKEN || '',
+  GREEN_API_URL:            env.GREEN_API_URL || 'https://api.green-api.com',
   TWILIO_ACCOUNT_SID:       env.TWILIO_ACCOUNT_SID || '',
   TWILIO_AUTH_TOKEN:        env.TWILIO_AUTH_TOKEN || '',
   TWILIO_WHATSAPP_FROM:     env.TWILIO_WHATSAPP_FROM || '',

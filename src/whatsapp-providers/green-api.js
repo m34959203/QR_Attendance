@@ -5,7 +5,7 @@
 const https = require('https');
 
 class GreenAPI {
-  constructor({ instanceId, instanceToken }) {
+  constructor({ instanceId, instanceToken, apiUrl }) {
     if (!instanceId || instanceId === 'ВСТАВЬТЕ_ID_ИНСТАНСА') {
       throw new Error('Укажите GREEN_API_INSTANCE_ID в src/config.js');
     }
@@ -14,6 +14,9 @@ class GreenAPI {
     }
     this.instanceId    = instanceId;
     this.instanceToken = instanceToken;
+    // Парсим URL: поддержка кастомных хостов вида https://7107.api.greenapi.com
+    const parsed = new URL(apiUrl || 'https://api.green-api.com');
+    this.hostname = parsed.hostname;
   }
 
   // Отправить сообщение
@@ -33,7 +36,7 @@ class GreenAPI {
   _post(apiPath, body) {
     return new Promise((resolve, reject) => {
       const req = https.request({
-        hostname: 'api.green-api.com',
+        hostname: this.hostname,
         path:     `/waInstance${this.instanceId}${apiPath}`,
         method:   'POST',
         headers: {
@@ -52,7 +55,7 @@ class GreenAPI {
   _get(apiPath) {
     return new Promise((resolve, reject) => {
       const req = https.get({
-        hostname: 'api.green-api.com',
+        hostname: this.hostname,
         path:     `/waInstance${this.instanceId}${apiPath}`,
         timeout: 15000,
       }, res => this._readJSON(res, resolve, reject));
