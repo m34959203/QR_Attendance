@@ -208,7 +208,6 @@ tr:hover td{background:#fafbfd}
   <div class="tab" onclick="showTab('groups')">🏫 Группы</div>
   <div class="tab" onclick="showTab('attendance')">📋 Журнал</div>
   <div class="tab" onclick="showTab('stats')">📈 Статистика</div>
-  <div class="tab" onclick="showTab('print')">🖨 Печать QR</div>
   <div class="tab" onclick="showTab('whatsapp')">📱 WhatsApp</div>
   <div class="tab" onclick="showTab('telegram')">📨 Telegram</div>
   <div class="tab" onclick="showTab('audit')">🔍 Аудит</div>
@@ -360,18 +359,6 @@ tr:hover td{background:#fafbfd}
     </div>
   </div>
   <div id="stats-result"></div>
-</div>
-
-<!-- ══════════════════════════════ ПЕЧАТЬ QR ══════════════════════════════ -->
-<div id="tab-print" style="display:none">
-  <div class="card no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div class="chips" id="print-chips" style="margin:0"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-outline" onclick="printConsentForm()">📝 Бланк согласия ПД</button>
-      <button class="btn btn-primary" onclick="window.print()">🖨 Распечатать все</button>
-    </div>
-  </div>
-  <div id="print-grid" class="print-grid"></div>
 </div>
 
 <!-- ══════════════════════════════ WHATSAPP ══════════════════════════════ -->
@@ -536,7 +523,7 @@ tr:hover td{background:#fafbfd}
 <!-- Тост -->
 <div class="toast" id="toast"></div>
 
-<!-- Модалка QR -->
+<!-- Модалка QR группы -->
 <div class="modal" id="qr-modal">
   <div class="modal-box">
     <h2 id="qr-name"></h2>
@@ -544,7 +531,6 @@ tr:hover td{background:#fafbfd}
     <img id="qr-img" src="" alt="QR">
     <p class="modal-url" id="qr-url"></p>
     <div class="modal-actions">
-      <button class="btn btn-primary btn-sm" onclick="printSingleQR()">🖨 Печать</button>
       <button class="btn btn-outline btn-sm" onclick="closeModal('qr-modal')">Закрыть</button>
     </div>
   </div>
@@ -580,11 +566,10 @@ tr:hover td{background:#fafbfd}
 // ════════════════════════════════════════════════════════════════
 // СОСТОЯНИЕ
 // ════════════════════════════════════════════════════════════════
-const TABS = ['dashboard','students','groups','attendance','stats','print','whatsapp','telegram','audit','email','errors'];
+const TABS = ['dashboard','students','groups','attendance','stats','whatsapp','telegram','audit','email','errors'];
 let _groups        = [];
 let _studentGrp    = null;
 let _attGrp        = null;
-let _printGrp      = null;
 let _attSortCol    = -1;
 let _attSortAsc    = true;
 let _broadcastGrpId = null;
@@ -603,7 +588,6 @@ function showTab(name) {
     groups:    loadGroups,
     attendance:loadAttendance,
     stats:     initStats,
-    print:     loadPrintQR,
     whatsapp:  loadWAStatus,
     telegram:  loadTGStatus,
     audit:     loadAudit,
@@ -733,6 +717,7 @@ async function loadGroups() {
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR класса</button>
           <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${esc(g.name)}')">📢 Рассылка</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
           <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${esc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
@@ -828,6 +813,7 @@ async function loadStudents(groupId) {
         ${s.parentEmail ? '📧 '+s.parentEmail : '<span style="color:#ddd">Email не указан</span>'}<br>
         👤 ${esc(s.parentName)}
         ${group ? '<br>🏫 '+esc(group.name) : ''}
+        ${s.pin ? '<br>🔑 PIN: <b style="font-size:16px;letter-spacing:2px;color:#2E5FA3">'+s.pin+'</b>' : ''}
         ${s.consentDate ? '<br>📝 Согласие: '+s.consentDate : ''}
       </div>
       <div class="channels">
@@ -836,7 +822,6 @@ async function loadStudents(groupId) {
         ${s.parentEmail ? '<span class="ch" style="background:#fff3e0;color:#e65100">📧 Email</span>' : ''}
       </div>
       <div class="actions">
-        <button class="btn btn-outline btn-sm" onclick="showQR('${s.id}')">QR</button>
         <button class="btn btn-outline btn-sm" onclick="editTG('${s.id}','${esc(s.telegramChatId||'')}')">📨 TG</button>
         <button class="btn btn-outline btn-sm" onclick="manualMark('${s.id}','${esc(s.name)}')">✏️</button>
         <button class="btn btn-outline btn-sm" onclick="openStudentModal('${s.id}')">⋯</button>
@@ -865,9 +850,8 @@ async function addStudent() {
     if (s.error) { toast('Ошибка: '+s.error,'err'); return; }
     ['f-name','f-phone','f-parent','f-email','f-tg','f-consent'].forEach(id => document.getElementById(id).value='');
     document.getElementById('f-group').value='';
-    toast(`${s.name} добавлен(а) ✅`);
+    toast(`${s.name} добавлен(а) ✅ PIN: ${s.pin}`);
     loadStudents();
-    if (s.qrImage) openQRModal(s.name, s.qrImage, s.qrUrl);
   } finally {
     btn.disabled = false; btn.textContent = 'Добавить ученика';
   }
@@ -1050,43 +1034,57 @@ async function loadStats() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// ПЕЧАТЬ QR
 // ════════════════════════════════════════════════════════════════
-async function loadPrintQR(groupId) {
-  if (groupId !== undefined) _printGrp = groupId || null;
-  _buildChips('print-chips', _printGrp, gid => loadPrintQR(gid));
-  const url = '/api/print-all' + (_printGrp ? '?groupId='+_printGrp : '');
-  const students = await api(url);
-  const el = document.getElementById('print-grid');
-  if (!students?.length) { el.innerHTML='<p style="color:#aaa;padding:24px">Нет учеников</p>'; return; }
-  el.innerHTML = students.map(s=>`
-    <div class="qr-card">
-      <img src="${s.qrImage}" style="width:170px;cursor:pointer" onclick="openQRModal('${esc(s.name)}','${s.qrImage}','${s.url}')">
-      <h3>${esc(s.name)}</h3>
-      <p>${s.url}</p>
-    </div>`).join('');
+// QR модалка (группы)
+// ════════════════════════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+async function showGroupQR(groupId) {
+  const d = await api(`/api/groups/${groupId}/qr`);
+  if (d.error) { toast(d.error,'err'); return; }
+  const pins = d.students.map(s => `<tr><td style="padding:4px 12px">${esc(s.name)}</td><td style="padding:4px 12px;font-weight:700;letter-spacing:2px;font-size:16px">${s.pin}</td></tr>`).join('');
+  document.getElementById('qr-name').textContent = d.group.name + ' — QR класса';
+  document.getElementById('qr-img').src = d.qrImage;
+  document.getElementById('qr-url').textContent = d.url;
+  document.getElementById('qr-modal').classList.add('show');
+  // Добавляем таблицу PIN-кодов под QR
+  let extra = document.getElementById('qr-pins');
+  if (!extra) {
+    extra = document.createElement('div');
+    extra.id = 'qr-pins';
+    document.getElementById('qr-img').parentNode.appendChild(extra);
+  }
+  extra.innerHTML = `<div style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left">
+    <table style="width:100%;border-collapse:collapse"><thead><tr>
+      <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">Ученик</th>
+      <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">PIN</th>
+    </tr></thead><tbody>${pins || '<tr><td colspan="2" style="color:#aaa;padding:12px">Нет учеников</td></tr>'}</tbody></table>
+  </div>
+  <button class="btn btn-primary" onclick="printGroupQR()" style="margin-top:12px;width:100%">🖨 Распечатать QR + PIN-коды</button>`;
 }
 
-// ════════════════════════════════════════════════════════════════
-// QR модалка
-// ════════════════════════════════════════════════════════════════
-async function showQR(id) {
-  const d = await api(`/api/students/${id}/qr`);
-  openQRModal(d.student.name, d.qrImage, d.url);
-}
-function openQRModal(name,img,url) {
-  document.getElementById('qr-name').textContent = name;
-  document.getElementById('qr-img').src = img;
-  document.getElementById('qr-url').textContent = url;
-  document.getElementById('qr-modal').classList.add('show');
-}
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-function printSingleQR() {
+function printGroupQR() {
   const img=document.getElementById('qr-img').src;
   const name=document.getElementById('qr-name').textContent;
+  const pins=document.getElementById('qr-pins')?.querySelector('table')?.outerHTML||'';
   const w=window.open('','_blank');
-  w.document.write(`<html><body style="text-align:center;font-family:sans-serif;padding:40px">
-    <h2>${name}</h2><img src="${img}" style="width:280px"><script>window.print();window.close()<\/script></body></html>`);
+  w.document.write(`<html><head><meta charset="UTF-8"><style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,sans-serif;padding:30px;text-align:center}
+    h2{margin-bottom:16px}
+    img{width:300px;margin-bottom:20px}
+    table{margin:20px auto;border-collapse:collapse;text-align:left}
+    th,td{padding:6px 16px;border-bottom:1px solid #ddd}
+    th{font-size:13px;color:#888}
+    td:nth-child(2){font-weight:700;font-size:18px;letter-spacing:3px}
+    .page-break{page-break-after:always}
+    @media print{body{padding:10px}}
+  </style></head><body>
+    <h2>${name}</h2><img src="${img}"><br>
+    <p style="font-size:13px;color:#888;margin-bottom:20px">Отсканируйте QR-код и введите свой PIN</p>
+    ${pins}
+    <script>window.print()<\/script>
+  </body></html>`);
 }
 
 function printConsentForm() {
