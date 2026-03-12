@@ -20,7 +20,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "'unsafe-inline'"],   // нужен для inline JS в index.html
+      scriptSrc:   ["'self'", "'unsafe-inline'"],   // нужен для inline <script> в index.html
+      scriptSrcAttr: ["'unsafe-inline'"],            // нужен для onclick/onchange атрибутов
       styleSrc:    ["'self'", "'unsafe-inline'"],
       imgSrc:      ["'self'", 'data:'],
       connectSrc:  ["'self'"],
@@ -29,6 +30,7 @@ app.use(helmet({
       frameAncestors: ["'none'"],
       formAction:  ["'self'"],
       baseUri:     ["'self'"],
+      upgradeInsecureRequests: null,                 // не форсировать HTTPS (локальный dev)
     },
   },
   crossOriginEmbedderPolicy: false,
