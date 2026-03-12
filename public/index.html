@@ -630,7 +630,9 @@ function toast(msg, type='ok', ms=3000) {
 async function api(url, opts={}) {
   try {
     const r = await fetch(url, { headers:{'Content-Type':'application/json'}, ...opts });
-    return await r.json();
+    const data = await r.json();
+    if (!r.ok && !data.error) data.error = `Ошибка ${r.status}`;
+    return data;
   } catch(e) { return { error: e.message }; }
 }
 
@@ -639,6 +641,7 @@ async function api(url, opts={}) {
 // ════════════════════════════════════════════════════════════════
 async function loadDashboard() {
   const d = await api('/api/dashboard');
+  if (d.error) { toast('Ошибка загрузки: '+d.error,'err'); return; }
   const s = d.summary || {};
   const waOk = d.wa?.state === 'authorized';
 
@@ -693,7 +696,7 @@ async function loadDashboard() {
   // Последние 10 сканирований
   const recs = await api('/api/attendance');
   const tbody = document.getElementById('dash-recent');
-  const show = (recs||[]).slice(0,10);
+  const show = (Array.isArray(recs) ? recs : []).slice(0,10);
   if (!show.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px">Сканирований пока нет</td></tr>'; return; }
   tbody.innerHTML = show.map(r => {
     const t = new Date(r.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
@@ -1325,10 +1328,11 @@ async function loadErrors() {
 // АВТООБНОВЛЕНИЕ + ИНИЦИАЛИЗАЦИЯ
 // ════════════════════════════════════════════════════════════════
 setInterval(() => api('/api/whatsapp/status').then(r => {
+  if (r.error) return;
   const c=r.state==='authorized'?'ready':r.state==='error'?'err':'warn';
   const d=document.getElementById('wa-dot'); if(d) d.className='dot '+c;
   document.getElementById('wa-text').textContent='WA: '+(r.state==='authorized'?'Подключён ✅':r.state==='notAuthorized'?'⚠️ Авториз.':'⚠️');
-}), 10000);
+}), 30000);
 
 // Старт
 (async () => {
