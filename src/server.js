@@ -104,9 +104,10 @@ const authGuard = [adminLimiter, authFailLimiter, (req, res, next) => {
 
 app.use('/admin', ...authGuard);
 app.use('/api',   ...authGuard);
-app.post('/api/*', apiWriteLimiter);
-app.put('/api/*',  apiWriteLimiter);
-app.delete('/api/*', apiWriteLimiter);
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) return apiWriteLimiter(req, res, next);
+  next();
+});
 app.use(express.static('public'));
 
 // ── Старт ─────────────────────────────────────────────────────────────────────
