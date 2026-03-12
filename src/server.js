@@ -61,8 +61,9 @@ const scanLimiter = rateLimit({
 });
 
 const authFailLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 15,    // 15 неверных паролей → блок на 15 мин
+  windowMs: 15 * 60 * 1000, max: 10,    // 10 неверных паролей → блок на 15 мин
   skipSuccessfulRequests: true,
+  requestWasSuccessful: (_req, res) => res.statusCode !== 401,  // считать только 401
   message: { error: 'Слишком много неверных попыток входа. Подождите 15 минут.' },
   standardHeaders: true, legacyHeaders: false,
 });
@@ -79,9 +80,18 @@ app.post('/telegram-webhook', async (req, res) => {
   if (req.body) await tg.handleWebhookUpdate(req.body).catch(e => logError(e.message));
 });
 
+// ── Favicon (пустой, чтобы не было 404) ──────────────────────────────────────
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', uptime: Math.floor(process.uptime()), ts: new Date().toISOString() });
+  const dbReady = db.isReady();
+  res.status(dbReady ? 200 : 503).json({
+    status: dbReady ? 'ok' : 'db_not_ready',
+    db: dbReady,
+    uptime: Math.floor(process.uptime()),
+    ts: new Date().toISOString(),
+  });
 });
 
 // ── Basic Auth ────────────────────────────────────────────────────────────────
@@ -102,6 +112,7 @@ const authGuard = [authFailLimiter, (req, res, next) => {
 app.use('/admin', ...authGuard);
 app.use('/api',   ...authGuard);
 app.use('/api', (req, res, next) => {
+  if (!db.isReady()) return res.status(503).json({ error: 'База данных ещё не готова. Попробуйте через несколько секунд.' });
   if (['POST', 'PUT', 'DELETE'].includes(req.method)) return apiWriteLimiter(req, res, next);
   next();
 });
@@ -109,10 +120,16 @@ app.use(express.static('public'));
 
 // ── Старт ─────────────────────────────────────────────────────────────────────
 (async () => {
-  await db.init();
+  try {
+    await db.init();
+  } catch (e) {
+    console.error('💀 Не удалось инициализировать БД:', e.message);
+    process.exit(1);
+  }
+
   em.init();
-  wa.init();
-  await tg.init();
+  try { await wa.init(); } catch (e) { logError('wa.init: ' + e.message); }
+  try { await tg.init(); } catch (e) { logError('tg.init: ' + e.message); }
   autoClean();
 
   // Делаем бэкап при старте (не чаще раза в день)
@@ -123,7 +140,10 @@ app.use(express.static('public'));
     console.log(`\n🚀 http://localhost:${config.PORT}/admin`);
     console.log(`🏫 ${config.SCHOOL_NAME}\n`);
   });
-})();
+})().catch(e => {
+  console.error('💀 Критическая ошибка при запуске:', e);
+  process.exit(1);
+});
 
 // ═══════════════════════════════════════════════════
 // QR СКАНИРОВАНИЕ
@@ -284,23 +304,29 @@ app.post('/api/groups', (req, res) => {
 });
 
 app.put('/api/groups/:id', (req, res) => {
-  const g = db.updateGroup(req.params.id, req.body);
-  db.audit('update', 'group', req.params.id, JSON.stringify(req.body), req.adminIp);
-  res.json(g);
+  try {
+    const g = db.updateGroup(req.params.id, req.body);
+    db.audit('update', 'group', req.params.id, JSON.stringify(req.body), req.adminIp);
+    res.json(g);
+  } catch (e) { logError('updateGroup: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 app.delete('/api/groups/:id', (req, res) => {
-  db.audit('delete', 'group', req.params.id, '', req.adminIp);
-  db.deleteGroup(req.params.id);
-  res.json({ ok: true });
+  try {
+    db.audit('delete', 'group', req.params.id, '', req.adminIp);
+    db.deleteGroup(req.params.id);
+    res.json({ ok: true });
+  } catch (e) { logError('deleteGroup: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/groups/:id/duplicate', (req, res) => {
-  const src = db.findGroup(req.params.id);
-  if (!src) return res.status(404).json({ error: 'Не найдена' });
-  const g = db.addGroup({ name: src.name + ' (копия)', lessonStartTime: src.lessonStartTime, lateMinutes: src.lateMinutes });
-  db.audit('duplicate', 'group', g.id, src.name, req.adminIp);
-  res.json(g);
+  try {
+    const src = db.findGroup(req.params.id);
+    if (!src) return res.status(404).json({ error: 'Не найдена' });
+    const g = db.addGroup({ name: src.name + ' (копия)', lessonStartTime: src.lessonStartTime, lateMinutes: src.lateMinutes });
+    db.audit('duplicate', 'group', g.id, src.name, req.adminIp);
+    res.json(g);
+  } catch (e) { logError('duplicateGroup: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/groups/:id/broadcast', async (req, res) => {
@@ -428,47 +454,49 @@ app.get('/api/attendance', (req, res) => {
 });
 
 app.get('/api/attendance/export', async (req, res) => {
-  const ExcelJS = require('exceljs');
-  let rows = db.getAllAttendance(req.query.groupId || null);
-  if (req.query.from) rows = rows.filter(r => r.time >= req.query.from);
-  if (req.query.to)   rows = rows.filter(r => r.time <= req.query.to + 'T23:59:59Z');
+  try {
+    const ExcelJS = require('exceljs');
+    let rows = db.getAllAttendance(req.query.groupId || null);
+    if (req.query.from) rows = rows.filter(r => r.time >= req.query.from);
+    if (req.query.to)   rows = rows.filter(r => r.time <= req.query.to + 'T23:59:59Z');
 
-  const wb = new ExcelJS.Workbook();
-  wb.creator = config.SCHOOL_NAME;
-  const ws = wb.addWorksheet('Посещаемость');
-  ws.columns = [
-    { header: 'Ученик',        key: 'studentName', width: 25 },
-    { header: 'Группа',        key: 'groupName',   width: 20 },
-    { header: 'Дата',          key: 'date',        width: 14 },
-    { header: 'Время',         key: 'time',        width: 10 },
-    { header: 'Статус',        key: 'status',      width: 20 },
-    { header: 'Опоздание мин', key: 'minutesLate', width: 14 },
-    { header: 'Родитель',      key: 'parentName',  width: 22 },
-    { header: 'Email',         key: 'parentEmail', width: 28 },
-  ];
-  ws.getRow(1).eachCell(c => {
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E5FA3' } };
-    c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  });
-  for (const r of rows) {
-    const d = new Date(r.time);
-    ws.addRow({
-      studentName: r.studentName, groupName: r.groupName || '—',
-      date: d.toLocaleDateString('ru-RU', { timeZone: config.TIMEZONE }),
-      time: d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: config.TIMEZONE }),
-      status: r.reason === 'sick' ? '🤒 Болен' : r.reason === 'valid' ? '📝 Уваж.' : r.isLate ? '⚠️ Опоздал(а)' : '✅ Вовремя',
-      minutesLate: r.isLate ? r.minutesLate : 0,
-      parentName:  r.parentName  || '—',
-      parentEmail: r.parentEmail || '—',
+    const wb = new ExcelJS.Workbook();
+    wb.creator = config.SCHOOL_NAME;
+    const ws = wb.addWorksheet('Посещаемость');
+    ws.columns = [
+      { header: 'Ученик',        key: 'studentName', width: 25 },
+      { header: 'Группа',        key: 'groupName',   width: 20 },
+      { header: 'Дата',          key: 'date',        width: 14 },
+      { header: 'Время',         key: 'time',        width: 10 },
+      { header: 'Статус',        key: 'status',      width: 20 },
+      { header: 'Опоздание мин', key: 'minutesLate', width: 14 },
+      { header: 'Родитель',      key: 'parentName',  width: 22 },
+      { header: 'Email',         key: 'parentEmail', width: 28 },
+    ];
+    ws.getRow(1).eachCell(c => {
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E5FA3' } };
+      c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     });
-  }
-  ws.eachRow((row, i) => {
-    if (i > 1 && i % 2 === 0) row.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4FA' } }; });
-  });
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename="attendance_${new Date().toISOString().slice(0,10)}.xlsx"`);
-  await wb.xlsx.write(res);
-  res.end();
+    for (const r of rows) {
+      const d = new Date(r.time);
+      ws.addRow({
+        studentName: r.studentName, groupName: r.groupName || '—',
+        date: d.toLocaleDateString('ru-RU', { timeZone: config.TIMEZONE }),
+        time: d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: config.TIMEZONE }),
+        status: r.reason === 'sick' ? '🤒 Болен' : r.reason === 'valid' ? '📝 Уваж.' : r.isLate ? '⚠️ Опоздал(а)' : '✅ Вовремя',
+        minutesLate: r.isLate ? r.minutesLate : 0,
+        parentName:  r.parentName  || '—',
+        parentEmail: r.parentEmail || '—',
+      });
+    }
+    ws.eachRow((row, i) => {
+      if (i > 1 && i % 2 === 0) row.eachCell(c => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4FA' } }; });
+    });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="attendance_${new Date().toISOString().slice(0,10)}.xlsx"`);
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (e) { logError('export: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 // ═══════════════════════════════════════════════════
@@ -544,7 +572,7 @@ app.get('/api/error-log', (req, res) => {
 // ═══════════════════════════════════════════════════
 // СТРАНИЦЫ
 // ═══════════════════════════════════════════════════
-app.get('/admin',   ...authGuard, (req, res) => res.sendFile('index.html',   { root: 'public' }));
+app.get('/admin',   (req, res) => res.sendFile('index.html',   { root: 'public' }));
 app.get('/privacy', (req, res) => res.sendFile('privacy.html', { root: 'public' }));
 app.get('/help',    (req, res) => res.sendFile('help.html',    { root: 'public' }));
 app.get('/',        (req, res) => res.redirect('/admin'));

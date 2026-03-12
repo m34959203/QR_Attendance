@@ -17,20 +17,30 @@ const BACKUP_DIR = path.join(__dirname, '../data/backups');
 let sql = null;
 let db  = null;
 let _saveTimer = null;
+let _initialized = false;
 
 // ── Инициализация ─────────────────────────────────────────────────────────────
 async function init() {
   fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
-  const SQL = await require('sql.js')();
+
+  let SQL;
+  try {
+    SQL = await require('sql.js')();
+  } catch (e) {
+    throw new Error('sql.js WASM не загружен: ' + e.message);
+  }
   sql = SQL;
   db  = fs.existsSync(DB_FILE)
     ? new SQL.Database(fs.readFileSync(DB_FILE))
     : new SQL.Database();
   _migrate();
   _saveNow();
+  _initialized = true;
   console.log('✅ SQLite:', DB_FILE);
 }
+
+function isReady() { return _initialized && db !== null; }
 
 // ── Сохранение (debounced) ────────────────────────────────────────────────────
 function _save() {
@@ -358,7 +368,7 @@ function _calcLate(lessonTime) {
 }
 
 module.exports = {
-  init, backup,
+  init, isReady, backup,
   getGroups, addGroup, updateGroup, deleteGroup, findGroup,
   getStudents, addStudent, updateStudent, deleteStudent, archiveStudent,
   findStudent, gdprDeleteStudent, getOrCreateParentToken, findStudentByToken,

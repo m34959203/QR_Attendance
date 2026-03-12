@@ -53,9 +53,7 @@ const JSON_DB = path.join(__dirname, 'data', 'db.json');
     const newStudentId = idMap[a.studentId];
     if (!newStudentId) continue;
     try {
-      const SQL = require('./node_modules/sql.js');
-      // Прямая вставка с сохранением оригинального времени
-      db._rawInsertAttendance(newStudentId, a.studentName, defaultGroup.id, a.time);
+      db.addManualAttendance(newStudentId, a.reason || '');
       aOk++;
     } catch {}
   }

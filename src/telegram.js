@@ -170,7 +170,9 @@ function _post(method, body) {
       path:     `/bot${config.TELEGRAM_BOT_TOKEN}/${method}`,
       method:   'POST',
       headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(json) },
+      timeout:  15000,
     }, res => _read(res, resolve, reject));
+    req.on('timeout', () => { req.destroy(); reject(new Error('Telegram: таймаут запроса')); });
     req.on('error', reject);
     req.write(json);
     req.end();
@@ -179,11 +181,15 @@ function _post(method, body) {
 
 function _get(method, params = {}) {
   const qs = new URLSearchParams(params).toString();
+  const timeout = params.timeout ? (Number(params.timeout) + 5) * 1000 : 15000;
   return new Promise((resolve, reject) => {
-    https.get({
+    const req = https.get({
       hostname: 'api.telegram.org',
       path: `/bot${config.TELEGRAM_BOT_TOKEN}/${method}${qs ? '?' + qs : ''}`,
-    }, res => _read(res, resolve, reject)).on('error', reject);
+      timeout,
+    }, res => _read(res, resolve, reject));
+    req.on('timeout', () => { req.destroy(); reject(new Error('Telegram: таймаут запроса')); });
+    req.on('error', reject);
   });
 }
 

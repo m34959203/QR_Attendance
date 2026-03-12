@@ -30,29 +30,34 @@ class GreenAPI {
   }
 
   // ── Внутренние HTTP-хелперы ─────────────────────────────────────────────────
-  _post(path, body) {
+  _post(apiPath, body) {
     return new Promise((resolve, reject) => {
       const req = https.request({
         hostname: 'api.green-api.com',
-        path:     `/waInstance${this.instanceId}${path}`,
+        path:     `/waInstance${this.instanceId}${apiPath}`,
         method:   'POST',
         headers: {
           'Content-Type':   'application/json',
           'Content-Length': Buffer.byteLength(body),
         },
+        timeout: 15000,
       }, res => this._readJSON(res, resolve, reject));
+      req.on('timeout', () => { req.destroy(); reject(new Error('Green API: таймаут запроса')); });
       req.on('error', reject);
       req.write(body);
       req.end();
     });
   }
 
-  _get(path) {
+  _get(apiPath) {
     return new Promise((resolve, reject) => {
-      https.get({
+      const req = https.get({
         hostname: 'api.green-api.com',
-        path:     `/waInstance${this.instanceId}${path}`,
-      }, res => this._readJSON(res, resolve, reject)).on('error', reject);
+        path:     `/waInstance${this.instanceId}${apiPath}`,
+        timeout: 15000,
+      }, res => this._readJSON(res, resolve, reject));
+      req.on('timeout', () => { req.destroy(); reject(new Error('Green API: таймаут запроса')); });
+      req.on('error', reject);
     });
   }
 
