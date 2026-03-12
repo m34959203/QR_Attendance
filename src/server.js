@@ -60,7 +60,7 @@ const scanLimiter = rateLimit({
 });
 
 const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 100,   // 100 запросов / 15 мин
+  windowMs: 15 * 60 * 1000, max: 300,   // 300 запросов / 15 мин (поллинг WA каждые 30с = 30 req/15мин)
   message: 'Слишком много запросов к панели управления.',
   standardHeaders: true, legacyHeaders: false,
 });
@@ -259,20 +259,25 @@ footer a{color:#2E5FA3;text-decoration:none}
 // API: ДАШБОРД
 // ═══════════════════════════════════════════════════
 app.get('/api/dashboard', (req, res) => {
-  res.json({
-    summary:  db.getTodaySummary(config.TIMEZONE),
-    chart:    db.getAttendanceByDays(config.TIMEZONE, 7),
-    wa:       wa.getStatus(),
-    email:    em.getStatus(),
-    students: db.getStudents().length,
-    groups:   db.getGroups().length,
-  });
+  try {
+    res.json({
+      summary:  db.getTodaySummary(config.TIMEZONE),
+      chart:    db.getAttendanceByDays(config.TIMEZONE, 7),
+      wa:       wa.getStatus(),
+      email:    em.getStatus(),
+      students: db.getStudents().length,
+      groups:   db.getGroups().length,
+    });
+  } catch (e) { logError('dashboard: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 // ═══════════════════════════════════════════════════
 // API: ГРУППЫ
 // ═══════════════════════════════════════════════════
-app.get('/api/groups', (req, res) => res.json(db.getGroups()));
+app.get('/api/groups', (req, res) => {
+  try { res.json(db.getGroups()); }
+  catch (e) { logError('groups: ' + e.message, req); res.status(500).json({ error: e.message }); }
+});
 
 app.post('/api/groups', (req, res) => {
   const errs = validateGroup(req.body);
@@ -329,16 +334,18 @@ app.post('/api/groups/:id/broadcast', async (req, res) => {
 // API: УЧЕНИКИ
 // ═══════════════════════════════════════════════════
 app.get('/api/students', (req, res) => {
-  const { groupId, search, archived } = req.query;
-  let students = db.getStudents(groupId || null, archived === '1');
-  if (search) {
-    const q = search.toLowerCase();
-    students = students.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      (s.parentName || '').toLowerCase().includes(q) ||
-      (s.parentPhone || '').includes(q));
-  }
-  res.json(students);
+  try {
+    const { groupId, search, archived } = req.query;
+    let students = db.getStudents(groupId || null, archived === '1');
+    if (search) {
+      const q = search.toLowerCase();
+      students = students.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        (s.parentName || '').toLowerCase().includes(q) ||
+        (s.parentPhone || '').includes(q));
+    }
+    res.json(students);
+  } catch (e) { logError('students: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/students', async (req, res) => {
@@ -421,7 +428,8 @@ app.post('/api/students/import', (req, res) => {
 // API: ПОСЕЩАЕМОСТЬ
 // ═══════════════════════════════════════════════════
 app.get('/api/attendance', (req, res) => {
-  res.json(db.getAttendance(200, req.query.groupId || null));
+  try { res.json(db.getAttendance(200, req.query.groupId || null)); }
+  catch (e) { logError('attendance: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/attendance/export', async (req, res) => {
@@ -525,7 +533,10 @@ app.post('/api/email/test', async (req, res) => {
 // ═══════════════════════════════════════════════════
 // API: АУДИТ / ЛОГИ
 // ═══════════════════════════════════════════════════
-app.get('/api/audit', (req, res) => res.json(db.getAuditLog(200)));
+app.get('/api/audit', (req, res) => {
+  try { res.json(db.getAuditLog(200)); }
+  catch (e) { logError('audit: ' + e.message, req); res.status(500).json({ error: e.message }); }
+});
 
 app.get('/api/error-log', (req, res) => {
   try {
