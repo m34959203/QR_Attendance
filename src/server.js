@@ -105,7 +105,7 @@ const authGuard = [authFailLimiter, (req, res, next) => {
       return next();
     }
   }
-  res.set('WWW-Authenticate', 'Basic realm="Панель учителя"');
+  res.set('WWW-Authenticate', 'Basic realm="Admin"');
   res.status(401).send('Требуется пароль');
 }];
 
