@@ -59,22 +59,16 @@ const scanLimiter = rateLimit({
   standardHeaders: true, legacyHeaders: false,
 });
 
-const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 300,   // 300 запросов / 15 мин (поллинг WA каждые 30с = 30 req/15мин)
-  message: 'Слишком много запросов к панели управления.',
-  standardHeaders: true, legacyHeaders: false,
-});
-
 const authFailLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 5,     // 5 неверных паролей → блок на 15 мин
   skipSuccessfulRequests: true,
-  message: 'Слишком много неверных попыток входа. Подождите 15 минут.',
+  message: { error: 'Слишком много неверных попыток входа. Подождите 15 минут.' },
   standardHeaders: true, legacyHeaders: false,
 });
 
 const apiWriteLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 30,         // 30 мутаций / мин
-  message: 'Слишком много запросов на запись. Подождите.',
+  windowMs: 60 * 1000, max: 60,         // 60 мутаций / мин
+  message: { error: 'Слишком много запросов на запись. Подождите.' },
   standardHeaders: true, legacyHeaders: false,
 });
 
@@ -90,7 +84,7 @@ app.get('/health', (req, res) => {
 });
 
 // ── Basic Auth ────────────────────────────────────────────────────────────────
-const authGuard = [adminLimiter, authFailLimiter, (req, res, next) => {
+const authGuard = [authFailLimiter, (req, res, next) => {
   const auth = req.headers.authorization;
   if (auth) {
     const [, enc] = auth.split(' ');
