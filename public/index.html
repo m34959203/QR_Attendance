@@ -366,7 +366,10 @@ tr:hover td{background:#fafbfd}
 <div id="tab-print" style="display:none">
   <div class="card no-print" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <div class="chips" id="print-chips" style="margin:0"></div>
-    <button class="btn btn-primary" onclick="window.print()">🖨 Распечатать все</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="printConsentForm()">📝 Бланк согласия ПД</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 Распечатать все</button>
+    </div>
   </div>
   <div id="print-grid" class="print-grid"></div>
 </div>
@@ -1081,6 +1084,73 @@ function printSingleQR() {
   const w=window.open('','_blank');
   w.document.write(`<html><body style="text-align:center;font-family:sans-serif;padding:40px">
     <h2>${name}</h2><img src="${img}" style="width:280px"><script>window.print();window.close()<\/script></body></html>`);
+}
+
+function printConsentForm() {
+  const w = window.open('','_blank');
+  const schoolName = document.querySelector('header .logo')?.textContent?.trim() || 'Учебный центр';
+  w.document.write(`<html><head><meta charset="UTF-8"><title>Согласие на обработку ПД</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Times New Roman',serif;font-size:14px;line-height:1.6;padding:40px 60px;color:#000}
+h1{text-align:center;font-size:16px;margin-bottom:24px;text-transform:uppercase}
+.field{border-bottom:1px solid #000;display:inline-block;min-width:250px;margin:0 4px}
+.field-long{border-bottom:1px solid #000;display:inline-block;width:100%;margin:4px 0}
+p{margin-bottom:10px;text-align:justify}
+ol{padding-left:20px;margin-bottom:12px}
+li{margin-bottom:6px}
+.sign-row{display:flex;justify-content:space-between;margin-top:40px;gap:40px}
+.sign-block{flex:1}
+.sign-line{border-bottom:1px solid #000;margin-top:30px;position:relative}
+.sign-label{font-size:11px;color:#555;margin-top:2px}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+td{padding:4px 8px;vertical-align:top}
+@media print{body{padding:20px 40px}}
+</style></head><body>
+<h1>Согласие на обработку персональных данных</h1>
+
+<p>Я, <span class="field">&nbsp;</span> (ФИО родителя/законного представителя),</p>
+<p>являясь законным представителем несовершеннолетнего:</p>
+<p><span class="field">&nbsp;</span> (ФИО ученика),</p>
+<p>даю согласие <b>${esc(schoolName)}</b> на обработку следующих персональных данных моего ребёнка и моих данных в системе учёта посещаемости «QR Attendance»:</p>
+
+<ol>
+<li><b>ФИО ученика</b> — для идентификации при сканировании QR-кода</li>
+<li><b>ФИО родителя</b> — для персонализации уведомлений</li>
+<li><b>Номер телефона родителя (WhatsApp)</b> — для отправки уведомлений о посещении</li>
+<li><b>Telegram (при наличии)</b> — для отправки уведомлений</li>
+<li><b>Email (при наличии)</b> — для отправки уведомлений</li>
+<li><b>Время прихода и факт опоздания</b> — для учёта посещаемости</li>
+</ol>
+
+<p><b>Цели обработки:</b> автоматическое уведомление родителей о приходе ребёнка на занятие, учёт посещаемости, информирование об опозданиях.</p>
+
+<p><b>Срок действия согласия:</b> на период обучения ребёнка, но не более 2 лет с даты подписания. Согласие может быть отозвано в любой момент путём письменного обращения к администрации.</p>
+
+<p><b>Передача данных:</b> для отправки уведомлений используются сервисы Green API (WhatsApp) и Telegram Bot API. Передаётся только номер телефона и текст уведомления.</p>
+
+<p><b>Права:</b> Вы вправе запросить информацию о хранимых данных, потребовать их исправления или полного удаления (право на забвение).</p>
+
+<p style="margin-top:8px"><b>Контактные данные:</b></p>
+<p><span class="field-long">&nbsp;</span></p>
+
+<div class="sign-row">
+  <div class="sign-block">
+    <div class="sign-line"></div>
+    <div class="sign-label">Подпись родителя / законного представителя</div>
+  </div>
+  <div class="sign-block">
+    <div class="sign-line"></div>
+    <div class="sign-label">Расшифровка подписи</div>
+  </div>
+  <div class="sign-block" style="flex:0.6">
+    <div class="sign-line"></div>
+    <div class="sign-label">Дата</div>
+  </div>
+</div>
+
+<script>window.print()<\/script>
+</body></html>`);
 }
 
 // ════════════════════════════════════════════════════════════════
