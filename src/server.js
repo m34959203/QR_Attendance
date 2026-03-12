@@ -210,6 +210,76 @@ app.get('/scan/:studentId', scanLimiter, async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════
+// ГРУППОВОЕ СКАНИРОВАНИЕ (QR группы + PIN ученика)
+// ═══════════════════════════════════════════════════
+app.get('/g/:groupId', scanLimiter, (req, res) => {
+  const group = db.findGroup(req.params.groupId);
+  if (!group) return res.send(scanPage('Ошибка', `<div class="icon">❌</div><h2>Группа не найдена</h2><p>QR-код недействителен</p>`));
+  res.send(groupScanPage(group));
+});
+
+app.post('/g/:groupId', scanLimiter, async (req, res) => {
+  try {
+    const group = db.findGroup(req.params.groupId);
+    if (!group) return res.status(404).json({ error: 'Группа не найдена' });
+
+    const pin = String(req.body.pin || '').trim();
+    if (!pin) return res.status(400).json({ error: 'Введите код ученика' });
+
+    const student = db.findStudentByPin(group.id, pin);
+    if (!student) return res.status(404).json({ error: 'Неверный код' });
+
+    // Защита от двойного скана (10 мин)
+    const last = db.getLastAttendance(student.id);
+    if (last && (Date.now() - new Date(last.time).getTime()) < 10 * 60000) {
+      return res.json({ already: true, name: student.name, time: fmt(last.time) });
+    }
+
+    const record = db.addAttendance(student.id);
+    const time   = fmt(record.time);
+    const date   = fmtDate(record.time);
+    const school = config.SCHOOL_NAME;
+    const lateNote = record.isLate ? `\n⚠️ Опоздание: ${record.minutesLate} мин` : '';
+
+    // WhatsApp
+    if (student.parentPhone) {
+      wa.send(student.parentPhone,
+        `[${school}]\n👋 Здравствуйте, ${student.parentName}!\n\n✅ ${student.name} пришёл(а) на урок.\n🕐 ${time}\n📅 ${date}${lateNote}`,
+        student.name);
+    }
+
+    // Telegram
+    if (student.telegramChatId && !student.telegramStopAt) {
+      const late = record.isLate ? `\n⚠️ Опоздание: <b>${record.minutesLate} мин</b>` : '';
+      tg.sendMessage(student.telegramChatId,
+        `[<b>${esc(school)}</b>]\n👋 ${esc(student.parentName)},\n\n${record.isLate?'⚠️':'✅'} <b>${esc(student.name)}</b> пришёл(а).\n🕐 <b>${time}</b>\n📅 ${date}${late}`
+      ).catch(e => logError('TG: ' + e.message));
+    }
+
+    // Email
+    if (student.parentEmail) {
+      em.sendArrival({
+        to: student.parentEmail, parentName: student.parentName,
+        studentName: student.name, time, date, school,
+        isLate: record.isLate, minutesLate: record.minutesLate,
+      }).catch(e => logError('Email: ' + e.message));
+    }
+
+    db.audit('scan_pin', 'attendance', record.id,
+      `${student.name} [PIN] — ${time}${record.isLate ? ' (опоздание)' : ''}`,
+      req.headers['x-forwarded-for'] || req.socket.remoteAddress || '');
+
+    res.json({
+      ok: true, name: student.name, time,
+      isLate: record.isLate, minutesLate: record.minutesLate,
+    });
+  } catch (e) {
+    logError(e.message, req);
+    res.status(500).json({ error: 'Временная ошибка' });
+  }
+});
+
+// ═══════════════════════════════════════════════════
 // ЛИЧНЫЙ КАБИНЕТ РОДИТЕЛЯ (публичный)
 // ═══════════════════════════════════════════════════
 app.get('/parent/:token', (req, res) => {
@@ -512,6 +582,19 @@ app.get('/api/print-all', async (req, res) => {
   res.json(result);
 });
 
+// QR группы — один QR для всего класса
+app.get('/api/groups/:id/qr', async (req, res) => {
+  const group = db.findGroup(req.params.id);
+  if (!group) return res.status(404).json({ error: 'Группа не найдена' });
+  const url = `${config.BASE_URL}/g/${group.id}`;
+  res.json({
+    qrImage: await QRCode.toDataURL(url, { width: 400, margin: 2 }),
+    url,
+    group,
+    students: db.getStudents(group.id).map(s => ({ id: s.id, name: s.name, pin: s.pin })),
+  });
+});
+
 // ═══════════════════════════════════════════════════
 // API: WHATSAPP / TELEGRAM / EMAIL
 // ═══════════════════════════════════════════════════
@@ -622,5 +705,76 @@ footer a{color:rgba(255,255,255,.7);text-decoration:none}
 </style></head><body>
 <div class="card">${content}</div>
 <footer><a href="/privacy">Политика конфиденциальности</a> · <a href="/help">Помощь</a></footer>
+</body></html>`;
+}
+
+function groupScanPage(group) {
+  const school = esc(config.SCHOOL_NAME);
+  const groupName = esc(group.name);
+  return `<!DOCTYPE html><html lang="ru"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#667eea">
+<title>${groupName} — ${school}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);
+     min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:24px;padding:40px 32px;text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,.2);max-width:380px;width:100%}
+.icon{font-size:56px;margin-bottom:12px}
+h2{font-size:22px;color:#1a1a2e;margin-bottom:4px}
+.school{font-size:13px;color:#aaa;margin-bottom:20px}
+.pin-input{width:100%;font-size:32px;text-align:center;letter-spacing:12px;padding:16px;
+           border:2px solid #e0e0e0;border-radius:16px;outline:none;font-weight:700}
+.pin-input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.2)}
+.btn{width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#667eea,#764ba2);
+     color:#fff;border:none;border-radius:16px;font-size:18px;font-weight:600;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{margin-top:16px;padding:12px;border-radius:12px;font-size:15px;display:none}
+.msg.ok{display:block;background:#e8f5e9;color:#2e7d32}
+.msg.err{display:block;background:#fce4ec;color:#c62828}
+.msg.warn{display:block;background:#fff3e0;color:#e65100}
+.late-msg{color:#e53935;font-weight:600;margin-top:4px}
+footer{margin-top:20px;font-size:11px;color:rgba(255,255,255,.5)}
+footer a{color:rgba(255,255,255,.7);text-decoration:none}
+</style></head><body>
+<div class="card">
+  <div class="icon">🎓</div>
+  <h2>${groupName}</h2>
+  <p class="school">${school}</p>
+  <form id="f" autocomplete="off">
+    <input class="pin-input" id="pin" type="tel" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autofocus>
+    <button class="btn" type="submit" id="btn">Отметиться</button>
+  </form>
+  <div class="msg" id="msg"></div>
+</div>
+<footer><a href="/privacy">Политика конфиденциальности</a> · <a href="/help">Помощь</a></footer>
+<script>
+const f=document.getElementById('f'),pin=document.getElementById('pin'),btn=document.getElementById('btn'),msg=document.getElementById('msg');
+pin.addEventListener('input',()=>{pin.value=pin.value.replace(/\\D/g,'');msg.className='msg';msg.style.display='none'});
+f.addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(pin.value.length<4)return;
+  btn.disabled=true;btn.textContent='...';msg.style.display='none';
+  try{
+    const r=await fetch('/g/${group.id}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pin.value})});
+    const d=await r.json();
+    if(d.already){
+      msg.className='msg warn';msg.innerHTML='✅ <b>'+d.name+'</b><br>Уже отмечен(а). Приход: '+d.time;
+    }else if(d.ok){
+      let t='✅ <b>'+d.name+'</b><br>Приход: '+d.time;
+      if(d.isLate)t+='<br><span class="late-msg">⚠️ Опоздание: '+d.minutesLate+' мин</span>';
+      t+='<br><small style="color:#27ae60">📨 Уведомление отправлено</small>';
+      msg.className='msg ok';msg.innerHTML=t;
+    }else{
+      msg.className='msg err';msg.textContent=d.error||'Ошибка';
+    }
+    msg.style.display='block';
+  }catch(e){msg.className='msg err';msg.textContent='Ошибка сети';msg.style.display='block'}
+  btn.disabled=false;btn.textContent='Отметиться';pin.value='';pin.focus();
+});
+</script>
 </body></html>`;
 }

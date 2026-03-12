@@ -733,6 +733,7 @@ async function loadGroups() {
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR класса</button>
           <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${esc(g.name)}')">📢 Рассылка</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
           <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${esc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
@@ -828,6 +829,7 @@ async function loadStudents(groupId) {
         ${s.parentEmail ? '📧 '+s.parentEmail : '<span style="color:#ddd">Email не указан</span>'}<br>
         👤 ${esc(s.parentName)}
         ${group ? '<br>🏫 '+esc(group.name) : ''}
+        ${s.pin ? '<br>🔑 PIN: <b style="font-size:16px;letter-spacing:2px;color:#2E5FA3">'+s.pin+'</b>' : ''}
         ${s.consentDate ? '<br>📝 Согласие: '+s.consentDate : ''}
       </div>
       <div class="channels">
@@ -1078,6 +1080,8 @@ function openQRModal(name,img,url) {
   document.getElementById('qr-name').textContent = name;
   document.getElementById('qr-img').src = img;
   document.getElementById('qr-url').textContent = url;
+  const pinsEl = document.getElementById('qr-pins');
+  if (pinsEl) pinsEl.innerHTML = '';
   document.getElementById('qr-modal').classList.add('show');
 }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
@@ -1087,6 +1091,54 @@ function printSingleQR() {
   const w=window.open('','_blank');
   w.document.write(`<html><body style="text-align:center;font-family:sans-serif;padding:40px">
     <h2>${name}</h2><img src="${img}" style="width:280px"><script>window.print();window.close()<\/script></body></html>`);
+}
+
+async function showGroupQR(groupId) {
+  const d = await api(`/api/groups/${groupId}/qr`);
+  if (d.error) { toast(d.error,'err'); return; }
+  const pins = d.students.map(s => `<tr><td style="padding:4px 12px">${esc(s.name)}</td><td style="padding:4px 12px;font-weight:700;letter-spacing:2px;font-size:16px">${s.pin}</td></tr>`).join('');
+  document.getElementById('qr-name').textContent = d.group.name + ' — QR класса';
+  document.getElementById('qr-img').src = d.qrImage;
+  document.getElementById('qr-url').textContent = d.url;
+  document.getElementById('qr-modal').classList.add('show');
+  // Добавляем таблицу PIN-кодов под QR
+  let extra = document.getElementById('qr-pins');
+  if (!extra) {
+    extra = document.createElement('div');
+    extra.id = 'qr-pins';
+    document.getElementById('qr-img').parentNode.appendChild(extra);
+  }
+  extra.innerHTML = `<div style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left">
+    <table style="width:100%;border-collapse:collapse"><thead><tr>
+      <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">Ученик</th>
+      <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">PIN</th>
+    </tr></thead><tbody>${pins || '<tr><td colspan="2" style="color:#aaa;padding:12px">Нет учеников</td></tr>'}</tbody></table>
+  </div>
+  <button class="btn btn-primary" onclick="printGroupQR()" style="margin-top:12px;width:100%">🖨 Распечатать QR + PIN-коды</button>`;
+}
+
+function printGroupQR() {
+  const img=document.getElementById('qr-img').src;
+  const name=document.getElementById('qr-name').textContent;
+  const pins=document.getElementById('qr-pins')?.querySelector('table')?.outerHTML||'';
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><meta charset="UTF-8"><style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,sans-serif;padding:30px;text-align:center}
+    h2{margin-bottom:16px}
+    img{width:300px;margin-bottom:20px}
+    table{margin:20px auto;border-collapse:collapse;text-align:left}
+    th,td{padding:6px 16px;border-bottom:1px solid #ddd}
+    th{font-size:13px;color:#888}
+    td:nth-child(2){font-weight:700;font-size:18px;letter-spacing:3px}
+    .page-break{page-break-after:always}
+    @media print{body{padding:10px}}
+  </style></head><body>
+    <h2>${name}</h2><img src="${img}"><br>
+    <p style="font-size:13px;color:#888;margin-bottom:20px">Отсканируйте QR-код и введите свой PIN</p>
+    ${pins}
+    <script>window.print()<\/script>
+  </body></html>`);
 }
 
 function printConsentForm() {

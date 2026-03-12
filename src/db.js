@@ -92,7 +92,15 @@ function _migrate() {
   // Добавляем колонки если не существуют (upgrade старых БД)
   _col('students',   'parentEmail',    'TEXT DEFAULT ""');
   _col('students',   'telegramStopAt', 'TEXT DEFAULT ""');
+  _col('students',   'pin',            'TEXT DEFAULT ""');
   _col('attendance', 'reason',         'TEXT DEFAULT ""');
+
+  // Генерируем PIN для учеников без него
+  const noPinStudents = _all('SELECT id, groupId FROM students WHERE pin IS NULL OR pin = ""');
+  for (const s of noPinStudents) {
+    const pin = _generatePin(s.groupId);
+    db.run('UPDATE students SET pin=? WHERE id=?', [pin, s.id]);
+  }
 
   // Индексы для производительности
   try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_studentId ON attendance(studentId)'); } catch {}
@@ -103,6 +111,20 @@ function _migrate() {
 
 function _col(tbl, col, def) {
   try { db.run(`ALTER TABLE ${tbl} ADD COLUMN ${col} ${def}`); } catch {}
+}
+
+// ── PIN генерация ────────────────────────────────────────────────────────────
+function _generatePin(groupId) {
+  const existing = new Set(
+    _all('SELECT pin FROM students WHERE groupId=? AND pin != ""', [groupId || '']).map(s => s.pin)
+  );
+  let pin;
+  let attempts = 0;
+  do {
+    pin = String(Math.floor(1000 + Math.random() * 9000)); // 1000–9999
+    attempts++;
+  } while (existing.has(pin) && attempts < 100);
+  return pin;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -177,17 +199,18 @@ function getStudents(groupId = null, includeArchived = false) {
 
 function addStudent({ name, parentPhone = '', parentName = 'Родитель', parentEmail = '',
                       telegramChatId = '', groupId = '', consentDate = '' }) {
+  const pin = _generatePin(groupId);
   const s = {
     id: _id(), name,
     parentPhone:    parentPhone.replace(/\D/g, ''),
     parentName,
     parentEmail:    (parentEmail || '').trim().toLowerCase(),
     telegramChatId: telegramChatId.trim(),
-    groupId, consentDate, isActive: 1,
+    groupId, consentDate, isActive: 1, pin,
     createdAt: new Date().toISOString(),
   };
-  _run('INSERT INTO students (id,name,parentPhone,parentName,parentEmail,telegramChatId,groupId,consentDate,isActive,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?)',
-    [s.id, s.name, s.parentPhone, s.parentName, s.parentEmail, s.telegramChatId, s.groupId, s.consentDate, s.isActive, s.createdAt]);
+  _run('INSERT INTO students (id,name,parentPhone,parentName,parentEmail,telegramChatId,groupId,consentDate,isActive,pin,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+    [s.id, s.name, s.parentPhone, s.parentName, s.parentEmail, s.telegramChatId, s.groupId, s.consentDate, s.isActive, s.pin, s.createdAt]);
   return s;
 }
 
@@ -211,6 +234,10 @@ function updateStudent(id, fields) {
 function deleteStudent(id)  { _run('DELETE FROM students WHERE id=?', [id]); }
 function archiveStudent(id) { _run('UPDATE students SET isActive=0 WHERE id=?', [id]); return findStudent(id); }
 function findStudent(id)    { return _get('SELECT * FROM students WHERE id=?', [id]); }
+
+function findStudentByPin(groupId, pin) {
+  return _get('SELECT * FROM students WHERE groupId=? AND pin=? AND isActive=1', [groupId, pin]);
+}
 
 // Токен для личного кабинета — первые 12 hex-символов ID
 function getOrCreateParentToken(studentId) {
@@ -371,7 +398,7 @@ module.exports = {
   init, isReady, backup,
   getGroups, addGroup, updateGroup, deleteGroup, findGroup,
   getStudents, addStudent, updateStudent, deleteStudent, archiveStudent,
-  findStudent, gdprDeleteStudent, getOrCreateParentToken, findStudentByToken,
+  findStudent, findStudentByPin, gdprDeleteStudent, getOrCreateParentToken, findStudentByToken,
   addAttendance, addManualAttendance, getLastAttendance,
   getAttendance, getStudentStats, getAllAttendance, getStudentAttendance,
   getTodaySummary, getAttendanceByDays,
