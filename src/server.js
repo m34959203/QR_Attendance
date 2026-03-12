@@ -61,8 +61,9 @@ const scanLimiter = rateLimit({
 });
 
 const authFailLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 15,    // 15 неверных паролей → блок на 15 мин
+  windowMs: 15 * 60 * 1000, max: 10,    // 10 неверных паролей → блок на 15 мин
   skipSuccessfulRequests: true,
+  requestWasSuccessful: (_req, res) => res.statusCode !== 401,  // считать только 401
   message: { error: 'Слишком много неверных попыток входа. Подождите 15 минут.' },
   standardHeaders: true, legacyHeaders: false,
 });
@@ -78,6 +79,9 @@ app.post('/telegram-webhook', async (req, res) => {
   res.sendStatus(200);
   if (req.body) await tg.handleWebhookUpdate(req.body).catch(e => logError(e.message));
 });
+
+// ── Favicon (пустой, чтобы не было 404) ──────────────────────────────────────
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // ── Health ────────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
