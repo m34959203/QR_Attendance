@@ -14,6 +14,7 @@ const { autoClean } = require('./cleanup');
 const { validateStudent, validateGroup, validatePhone, validateMessage } = require('./validate');
 
 const app = express();
+app.set('trust proxy', 1);   // Railway / Docker — за reverse-proxy
 
 // ── Безопасность ──────────────────────────────────────────────────────────────
 app.use(helmet({
@@ -60,7 +61,7 @@ const scanLimiter = rateLimit({
 });
 
 const authFailLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 5,     // 5 неверных паролей → блок на 15 мин
+  windowMs: 15 * 60 * 1000, max: 15,    // 15 неверных паролей → блок на 15 мин
   skipSuccessfulRequests: true,
   message: { error: 'Слишком много неверных попыток входа. Подождите 15 минут.' },
   standardHeaders: true, legacyHeaders: false,
