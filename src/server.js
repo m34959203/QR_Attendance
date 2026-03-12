@@ -1,5 +1,4 @@
 'use strict';
-require('dotenv').config();
 const express    = require('express');
 const rateLimit  = require('express-rate-limit');
 const helmet     = require('helmet');
@@ -12,6 +11,7 @@ const tg         = require('./telegram');
 const em         = require('./email');
 const config     = require('./config');
 const { autoClean } = require('./cleanup');
+const { validateStudent, validateGroup, validatePhone, validateMessage } = require('./validate');
 
 const app = express();
 
@@ -27,6 +27,8 @@ app.use(helmet({
       fontSrc:     ["'self'"],
       objectSrc:   ["'none'"],
       frameAncestors: ["'none'"],
+      formAction:  ["'self'"],
+      baseUri:     ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -68,6 +70,12 @@ const authFailLimiter = rateLimit({
   standardHeaders: true, legacyHeaders: false,
 });
 
+const apiWriteLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 30,         // 30 мутаций / мин
+  message: 'Слишком много запросов на запись. Подождите.',
+  standardHeaders: true, legacyHeaders: false,
+});
+
 // ── Telegram Webhook (публичный — до Basic Auth) ──────────────────────────────
 app.post('/telegram-webhook', async (req, res) => {
   res.sendStatus(200);
@@ -96,6 +104,9 @@ const authGuard = [adminLimiter, authFailLimiter, (req, res, next) => {
 
 app.use('/admin', ...authGuard);
 app.use('/api',   ...authGuard);
+app.post('/api/*', apiWriteLimiter);
+app.put('/api/*',  apiWriteLimiter);
+app.delete('/api/*', apiWriteLimiter);
 app.use(express.static('public'));
 
 // ── Старт ─────────────────────────────────────────────────────────────────────
@@ -261,8 +272,9 @@ app.get('/api/dashboard', (req, res) => {
 app.get('/api/groups', (req, res) => res.json(db.getGroups()));
 
 app.post('/api/groups', (req, res) => {
+  const errs = validateGroup(req.body);
+  if (errs) return res.status(400).json({ error: errs[0], errors: errs });
   const { name, lessonStartTime, lateMinutes } = req.body;
-  if (!name?.trim()) return res.status(400).json({ error: 'Укажите название' });
   const g = db.addGroup({ name: name.trim(), lessonStartTime: lessonStartTime || '', lateMinutes: Number(lateMinutes) || 10 });
   db.audit('create', 'group', g.id, g.name, req.adminIp);
   res.json(g);
@@ -289,8 +301,9 @@ app.post('/api/groups/:id/duplicate', (req, res) => {
 });
 
 app.post('/api/groups/:id/broadcast', async (req, res) => {
+  const msgErr = validateMessage(req.body.message);
+  if (msgErr) return res.status(400).json({ error: msgErr });
   const { message } = req.body;
-  if (!message?.trim()) return res.status(400).json({ error: 'Укажите сообщение' });
   const students = db.getStudents(req.params.id);
   let sent = 0, failed = 0;
   for (const s of students) {
@@ -326,8 +339,9 @@ app.get('/api/students', (req, res) => {
 });
 
 app.post('/api/students', async (req, res) => {
+  const errs = validateStudent(req.body);
+  if (errs) return res.status(400).json({ error: errs[0], errors: errs });
   const { name, parentPhone, parentName, parentEmail, telegramChatId, groupId, consentDate } = req.body;
-  if (!name?.trim()) return res.status(400).json({ error: 'Укажите имя' });
   const s   = db.addStudent({ name: name.trim(), parentPhone, parentName, parentEmail, telegramChatId, groupId, consentDate });
   const url = `${config.BASE_URL}/scan/${s.id}`;
   const parentUrl = `${config.BASE_URL}/parent/${db.getOrCreateParentToken(s.id)}`;
@@ -336,6 +350,10 @@ app.post('/api/students', async (req, res) => {
 });
 
 app.put('/api/students/:id', (req, res) => {
+  if (req.body.name !== undefined || req.body.parentPhone !== undefined || req.body.parentEmail !== undefined) {
+    const errs = validateStudent({ name: req.body.name || 'x', ...req.body });
+    if (errs) return res.status(400).json({ error: errs[0], errors: errs });
+  }
   const s = db.updateStudent(req.params.id, req.body);
   if (!s) return res.status(404).json({ error: 'Не найден' });
   db.audit('update', 'student', req.params.id, JSON.stringify(Object.keys(req.body)), req.adminIp);
@@ -467,8 +485,9 @@ app.get('/api/whatsapp/status', (req, res) => res.json(wa.getStatus()));
 app.get('/api/whatsapp/log',    (req, res) => res.json(wa.getLog(100)));
 
 app.post('/api/whatsapp/test', async (req, res) => {
-  const phone = (req.body.phone || '').replace(/\D/g, '');
-  if (!phone) return res.status(400).json({ error: 'Укажите номер' });
+  const phoneErr = validatePhone(req.body.phone);
+  if (phoneErr) return res.status(400).json({ error: phoneErr });
+  const phone = String(req.body.phone).replace(/\D/g, '');
   try {
     await wa.sendDirect(phone, `[${config.SCHOOL_NAME}] ✅ Тестовое сообщение от QR-системы посещаемости. Всё работает!`);
     db.audit('test_wa', 'whatsapp', '', phone, req.adminIp);
