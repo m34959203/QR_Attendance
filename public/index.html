@@ -4,37 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#2E5FA3">
 <title>QR Посещаемость — Панель педагога</title>
 <style>
+:root{
+  --c-primary:#2E5FA3;--c-primary-hover:#224880;--c-primary-light:#4472C4;
+  --c-accent:#667eea;--c-accent2:#764ba2;
+  --c-ok:#1e8449;--c-ok-bg:#e8f5e9;--c-ok-text:#1b5e20;
+  --c-warn:#e65100;--c-warn-bg:#fff3e0;--c-warn-text:#bf360c;
+  --c-err:#c62828;--c-err-bg:#fce4ec;--c-err-text:#b71c1c;
+  --c-text:#1a1a2e;--c-text2:#555;--c-text3:#888;--c-text4:#aaa;
+  --c-bg:#f0f2f5;--c-card:#fff;--c-border:#e8ecf2;--c-input-border:#e0e4ec;
+  --c-surface:#f7f9fc;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.05);--shadow-md:0 4px 16px rgba(0,0,0,.1);
+  --r-sm:8px;--r-md:10px;--r-lg:14px;--r-xl:18px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--c-bg);color:var(--c-text);transition:background .3s,color .3s}
+
+/* ── Тёмная тема ── */
+@media(prefers-color-scheme:dark){
+  :root{
+    --c-text:#e4e6eb;--c-text2:#b0b3b8;--c-text3:#8a8d91;--c-text4:#6a6c70;
+    --c-bg:#18191a;--c-card:#242526;--c-border:#3e4042;--c-input-border:#4e4f50;
+    --c-surface:#2d2e2f;--c-primary-hover:#5a8fd4;
+    --c-ok-bg:#1b3a26;--c-ok-text:#66bb6a;
+    --c-warn-bg:#3e2a10;--c-warn-text:#ffb74d;
+    --c-err-bg:#3e1a1a;--c-err-text:#ef9a9a;
+    --shadow-sm:0 2px 8px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4);
+  }
+  img{opacity:.92}
+}
 
 /* ── Шапка ── */
-header{background:linear-gradient(135deg,#2E5FA3,#4472C4);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+header{background:linear-gradient(135deg,var(--c-primary),var(--c-primary-light));padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
 header h1{color:#fff;font-size:17px;font-weight:700}
 .header-right{display:flex;align-items:center;gap:10px}
 .wa-badge{display:flex;align-items:center;gap:7px;cursor:pointer;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px}
 .wa-badge span{color:#fff;font-size:12px;font-weight:500}
 
 /* ── Вкладки (a11y: role=tablist) ── */
-.tabs{background:#fff;display:flex;overflow-x:auto;border-bottom:2px solid #e8ecf2;padding:0 12px;position:sticky;top:49px;z-index:40}
-.tab{padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.15s;border:none;background:none;min-height:44px}
-.tab:focus-visible{outline:2px solid #4472C4;outline-offset:-2px;border-radius:4px}
-.tab.active{color:#2E5FA3;border-bottom-color:#2E5FA3}
-.tab:hover:not(.active){color:#444}
+.tabs{background:var(--c-card);display:flex;overflow-x:auto;border-bottom:2px solid var(--c-border);padding:0 12px;position:sticky;top:49px;z-index:40;scrollbar-width:thin}
+.tab{padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--c-text3);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.15s;border:none;background:none;min-height:44px}
+.tab:focus-visible{outline:2px solid var(--c-primary-light);outline-offset:-2px;border-radius:4px}
+.tab.active{color:var(--c-primary);border-bottom-color:var(--c-primary)}
+.tab:hover:not(.active){color:var(--c-text2)}
 
 /* ── Контент ── */
 .content{padding:20px;max-width:1200px;margin:0 auto}
-.card{background:#fff;border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.card{background:var(--c-card);border-radius:var(--r-lg);padding:24px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
 
 /* ── Дашборд ── */
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:20px}
-.dash-card{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.dash-num{font-size:36px;font-weight:800;color:#2E5FA3;line-height:1}
-.dash-lbl{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
+.dash-card{background:var(--c-card);border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--shadow-sm)}
+.dash-num{font-size:36px;font-weight:800;color:var(--c-primary);line-height:1}
+.dash-lbl{font-size:12px;color:var(--c-text3);text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
 .dash-icon{font-size:28px;margin-bottom:8px}
-.dash-ok .dash-num{color:#1e8449}
-.dash-warn .dash-num{color:#c62828}
+.dash-ok .dash-num{color:var(--c-ok)}
+.dash-warn .dash-num{color:var(--c-err)}
 
 /* ── Онбординг ── */
 .onboard{background:linear-gradient(135deg,#667eea15,#764ba215);border:2px dashed #667eea50;border-radius:14px;padding:28px;text-align:center;margin-bottom:20px}
@@ -46,32 +73,34 @@ header h1{color:#fff;font-size:17px;font-weight:700}
 
 /* ── Формы ── */
 .form-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.form-section{margin-bottom:20px}
+.form-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-text3);margin-bottom:12px;padding-bottom:6px;border-bottom:1.5px solid var(--c-border)}
 .field{display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1;position:relative}
-.field label{font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
-.field label .req{color:#c62828;font-weight:700}
-.field label .tip{font-size:11px;color:#777;font-weight:400;text-transform:none}
-input[type=text],input[type=time],input[type=number],input[type=date],input[type=tel],input[type=email],select,textarea{border:1.5px solid #e0e4ec;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff;width:100%;font-family:inherit;transition:.15s}
-input:focus,select:focus,textarea:focus{border-color:#4472C4;box-shadow:0 0 0 3px rgba(68,114,196,.12)}
-.field-error input,.field-error select,.field-error textarea{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.1)}
-.field .error-msg{font-size:11px;color:#c62828;margin-top:2px;display:none}
+.field label{font-size:12px;font-weight:700;color:var(--c-text2);text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
+.field label .req{color:var(--c-err);font-weight:700}
+.field label .tip{font-size:11px;color:var(--c-text3);font-weight:400;text-transform:none}
+input[type=text],input[type=time],input[type=number],input[type=date],input[type=tel],input[type=email],select,textarea{border:1.5px solid var(--c-input-border);border-radius:var(--r-md);padding:10px 14px;font-size:14px;outline:none;background:var(--c-card);color:var(--c-text);width:100%;font-family:inherit;transition:.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--c-primary-light);box-shadow:0 0 0 3px rgba(68,114,196,.12)}
+.field-error input,.field-error select,.field-error textarea{border-color:var(--c-err);box-shadow:0 0 0 3px rgba(198,40,40,.1)}
+.field .error-msg{font-size:11px;color:var(--c-err);margin-top:2px;display:none}
 .field-error .error-msg{display:block}
-.field .hint{font-size:12px;color:#777;margin-top:3px}
+.field .hint{font-size:12px;color:var(--c-text3);margin-top:3px}
 
 /* ── Кнопки ── */
-.btn{padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px}
-.btn:focus-visible{outline:2px solid #4472C4;outline-offset:2px}
+.btn{padding:10px 20px;border:none;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px}
+.btn:focus-visible{outline:2px solid var(--c-primary-light);outline-offset:2px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-primary{background:#2E5FA3;color:#fff}
-.btn-primary:hover:not(:disabled){background:#224880}
-.btn-outline{background:#fff;color:#2E5FA3;border:1.5px solid #2E5FA3}
-.btn-outline:hover:not(:disabled){background:#f0f4fa}
-.btn-danger{background:#fff;color:#c62828;border:1.5px solid #c62828}
-.btn-danger:hover:not(:disabled){background:#fff5f5}
-.btn-success{background:#1e8449;color:#fff}
+.btn-primary{background:var(--c-primary);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--c-primary-hover)}
+.btn-outline{background:var(--c-card);color:var(--c-primary);border:1.5px solid var(--c-primary)}
+.btn-outline:hover:not(:disabled){background:var(--c-surface)}
+.btn-danger{background:var(--c-card);color:var(--c-err);border:1.5px solid var(--c-err)}
+.btn-danger:hover:not(:disabled){background:var(--c-err-bg)}
+.btn-success{background:var(--c-ok);color:#fff}
 .btn-success:hover:not(:disabled){background:#176437}
-.btn-warn{background:#fff;color:#bf360c;border:1.5px solid #e65100}
-.btn-warn:hover:not(:disabled){background:#fff8f0}
-.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px;min-height:36px}
+.btn-warn{background:var(--c-card);color:var(--c-warn-text);border:1.5px solid var(--c-warn)}
+.btn-warn:hover:not(:disabled){background:var(--c-warn-bg)}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:var(--r-sm);min-height:36px}
 
 /* ── Статус точки ── */
 .dot{width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0}
@@ -80,37 +109,37 @@ input:focus,select:focus,textarea:focus{border-color:#4472C4;box-shadow:0 0 0 3p
 .dot.err{background:#c62828}
 
 /* ── Уведомление (toast) ── */
-.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:500;z-index:1000;transform:translateY(100px);opacity:0;transition:.3s;max-width:360px;display:flex;align-items:center;gap:10px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--c-text);color:#fff;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:500;z-index:1000;transform:translateY(100px);opacity:0;transition:.3s;max-width:360px;display:flex;align-items:center;gap:10px}
 .toast.show{transform:translateY(0);opacity:1}
-.toast.ok{background:#1e8449}
-.toast.err{background:#c62828}
+.toast.ok{background:var(--c-ok)}
+.toast.err{background:var(--c-err)}
 .toast .toast-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 0 0 8px;opacity:.7}
 .toast .toast-close:hover{opacity:1}
 
 /* ── Карточки учеников ── */
 .students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.student-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1.5px solid #e8ecf2;transition:.2s;position:relative}
-.student-card:hover{border-color:#4472C4;box-shadow:0 4px 16px rgba(46,95,163,.1)}
-.student-card.no-consent{border-color:#e6510050;background:#fff8f0}
-.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-bottom:10px}
+.student-card{background:var(--c-card);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow-sm);border:1.5px solid var(--c-border);transition:.2s;position:relative}
+.student-card:hover{border-color:var(--c-primary-light);box-shadow:var(--shadow-md)}
+.student-card.no-consent{border-color:rgba(230,81,0,.3);background:var(--c-warn-bg)}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--c-accent),var(--c-accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-bottom:10px}
 .student-card h3{font-size:15px;margin-bottom:5px}
-.meta{font-size:12px;color:#666;line-height:1.8;margin-bottom:10px}
+.meta{font-size:12px;color:var(--c-text3);line-height:1.8;margin-bottom:10px}
 .channels{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .ch{font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px}
-.ch-wa{background:#e8f5e9;color:#1b5e20}
+.ch-wa{background:var(--c-ok-bg);color:var(--c-ok-text)}
 .ch-tg{background:#e3f2fd;color:#0d47a1}
-.ch-late{background:#fff3e0;color:#bf360c}
+.ch-late{background:var(--c-warn-bg);color:var(--c-warn-text)}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 .consent-badge{position:absolute;top:12px;right:12px;font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600}
-.consent-ok{background:#e8f5e9;color:#1b5e20}
-.consent-no{background:#fff3e0;color:#bf360c}
+.consent-ok{background:var(--c-ok-bg);color:var(--c-ok-text)}
+.consent-no{background:var(--c-warn-bg);color:var(--c-warn-text)}
 
 /* ── Фильтры-чипы ── */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.chip{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e4ec;background:#fff;color:#555;transition:.15s;min-height:36px;display:inline-flex;align-items:center}
-.chip:focus-visible{outline:2px solid #4472C4;outline-offset:2px}
-.chip.active{background:#2E5FA3;color:#fff;border-color:#2E5FA3}
-.chip:hover:not(.active){border-color:#4472C4;color:#2E5FA3}
+.chip{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--c-input-border);background:var(--c-card);color:var(--c-text2);transition:.15s;min-height:36px;display:inline-flex;align-items:center}
+.chip:focus-visible{outline:2px solid var(--c-primary-light);outline-offset:2px}
+.chip.active{background:var(--c-primary);color:#fff;border-color:var(--c-primary)}
+.chip:hover:not(.active){border-color:var(--c-primary-light);color:var(--c-primary)}
 
 /* ── Поиск ── */
 .search-wrap{position:relative;flex:1;min-width:180px}
@@ -118,80 +147,82 @@ input:focus,select:focus,textarea:focus{border-color:#4472C4;box-shadow:0 0 0 3p
 .search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
 
 /* ── Таблица ── */
-.table-wrap{overflow-x:auto;border-radius:12px;border:1.5px solid #e8ecf2}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1.5px solid var(--c-border)}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f7f9fc;padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:#666;letter-spacing:.4px;border-bottom:1.5px solid #e8ecf2;cursor:pointer;user-select:none;white-space:nowrap}
-th:hover{color:#2E5FA3}
-th.sort-asc{color:#2E5FA3}
-th.sort-asc::after{content:' ▲';color:#2E5FA3}
-th.sort-desc{color:#2E5FA3}
-th.sort-desc::after{content:' ▼';color:#2E5FA3}
-td{padding:12px 14px;border-bottom:1px solid #f0f2f5;color:#333}
+th{background:var(--c-surface);padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:var(--c-text3);letter-spacing:.4px;border-bottom:1.5px solid var(--c-border);cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--c-primary)}
+th.sort-asc{color:var(--c-primary)}
+th.sort-asc::after{content:' ▲';color:var(--c-primary)}
+th.sort-desc{color:var(--c-primary)}
+th.sort-desc::after{content:' ▼';color:var(--c-primary)}
+td{padding:12px 14px;border-bottom:1px solid var(--c-bg);color:var(--c-text)}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#fafbfd}
+tr:hover td{background:var(--c-surface)}
 td[title]{cursor:help}
 
 /* ── Скелетон загрузки ── */
-.skeleton{background:linear-gradient(90deg,#f0f2f5 25%,#e8ecf2 50%,#f0f2f5 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;height:16px;display:inline-block}
+.skeleton{background:linear-gradient(90deg,var(--c-bg) 25%,var(--c-border) 50%,var(--c-bg) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;height:16px;display:inline-block}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skeleton-row td{padding:14px}
 .skeleton-row .skeleton{width:80%;height:14px}
 
 /* ── Бейджи ── */
 .badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
-.b-ok{background:#e8f5e9;color:#1b5e20}
-.b-late{background:#fce4ec;color:#b71c1c}
+.b-ok{background:var(--c-ok-bg);color:var(--c-ok-text)}
+.b-late{background:var(--c-err-bg);color:var(--c-err-text)}
 .b-sick{background:#e3f2fd;color:#0d47a1}
 .b-valid{background:#f3e5f5;color:#4a148c}
-.b-warn{background:#fff3e0;color:#bf360c}
-.b-err{background:#fce4ec;color:#b71c1c}
-.b-q{background:#fffde7;color:#e65100}
+.b-warn{background:var(--c-warn-bg);color:var(--c-warn-text)}
+.b-err{background:var(--c-err-bg);color:var(--c-err-text)}
+.b-q{background:#fffde7;color:var(--c-warn)}
 
 /* ── Статистика ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.stat-card{background:#f7f9fc;border-radius:12px;padding:16px;text-align:center;border:1.5px solid #e8ecf2}
-.stat-card .month{font-size:12px;color:#666;margin-bottom:8px}
-.stat-card .num{font-size:28px;font-weight:800;color:#2E5FA3}
+.stat-card{background:var(--c-surface);border-radius:12px;padding:16px;text-align:center;border:1.5px solid var(--c-border)}
+.stat-card .month{font-size:12px;color:var(--c-text3);margin-bottom:8px}
+.stat-card .num{font-size:28px;font-weight:800;color:var(--c-primary)}
 .stat-summary{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:20px}
 .stat-summary .s{text-align:center}
 .stat-summary .sn{font-size:34px;font-weight:800}
-.stat-summary .sl{font-size:12px;color:#666;text-transform:uppercase}
+.stat-summary .sl{font-size:12px;color:var(--c-text3);text-transform:uppercase}
 
 /* ── QR ── */
 .print-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:20px}
-.qr-card{text-align:center;padding:20px;border:2px solid #e0e4ec;border-radius:14px;background:#fff}
+.qr-card{text-align:center;padding:20px;border:2px solid var(--c-input-border);border-radius:var(--r-lg);background:var(--c-card)}
 .qr-card h3{font-size:13px;font-weight:700;margin-top:8px;margin-bottom:3px}
 .qr-card p{font-size:10px;color:#777;word-break:break-all}
 
 /* ── WA панель ── */
 .wa-stat-row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px}
 .wa-stat{text-align:center}
-.wa-stat .n{font-size:30px;font-weight:800;color:#2E5FA3}
-.wa-stat .l{font-size:12px;color:#666;text-transform:uppercase}
+.wa-stat .n{font-size:30px;font-weight:800;color:var(--c-primary)}
+.wa-stat .l{font-size:12px;color:var(--c-text3);text-transform:uppercase}
 
 /* ── Модалка (a11y: role=dialog, focus trap, ESC close) ── */
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
 .modal.show{display:flex}
-.modal-box{background:#fff;border-radius:18px;padding:28px;max-width:480px;width:100%;text-align:center;max-height:90vh;overflow-y:auto;position:relative}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:var(--c-card);border-radius:var(--r-xl);padding:28px;max-width:480px;width:100%;text-align:center;max-height:90vh;overflow-y:auto;position:relative;animation:slideUp .25s ease}
 .modal-box h2{margin-bottom:8px;font-size:19px}
 .modal-box img{max-width:220px;margin:12px auto;display:block;border-radius:10px}
 .modal-url{font-size:12px;color:#777;word-break:break-all;margin:8px 0 16px}
 .modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
 /* ── Confirm-диалог (замена native confirm) ── */
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .confirm-box{text-align:center}
 .confirm-box .confirm-icon{font-size:48px;margin-bottom:12px}
-.confirm-box .confirm-title{font-size:18px;font-weight:700;margin-bottom:8px}
-.confirm-box .confirm-text{font-size:14px;color:#555;margin-bottom:20px;line-height:1.6}
+.confirm-box .confirm-title{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--c-text)}
+.confirm-box .confirm-text{font-size:14px;color:var(--c-text2);margin-bottom:20px;line-height:1.6}
 
 /* ── Лог строки ── */
-.log-sent td{background:#f1faf5}
-.log-err td{background:#fff5f5}
-.log-q td{background:#fffbf0}
+.log-sent td{background:var(--c-ok-bg)}
+.log-err td{background:var(--c-err-bg)}
+.log-q td{background:var(--c-warn-bg)}
 
 /* ── Дата-фильтр ── */
 .date-filter{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.date-filter label{font-size:12px;color:#666;font-weight:600}
+.date-filter label{font-size:12px;color:var(--c-text3);font-weight:600}
 
 /* ── Печать ── */
 @media print{
@@ -202,16 +233,26 @@ td[title]{cursor:help}
 }
 
 /* ── Тест-блок ── */
-.test-block{background:#f7f9fc;border-radius:12px;padding:16px;margin-top:16px}
-.test-block h3{font-size:14px;margin-bottom:12px;color:#444}
+.test-block{background:var(--c-surface);border-radius:12px;padding:16px;margin-top:16px}
+.test-block h3{font-size:14px;margin-bottom:12px;color:var(--c-text2)}
 
 /* ── Импорт ── */
-.import-zone{border:2px dashed #c8d6e8;border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
-.import-zone:hover,.import-zone:focus-within{border-color:#4472C4;background:#f0f4fa}
-.import-zone p{color:#666;font-size:14px}
+.import-zone{border:2px dashed var(--c-border);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
+.import-zone:hover,.import-zone:focus-within{border-color:var(--c-primary-light);background:var(--c-surface)}
+.import-zone p{color:var(--c-text3);font-size:14px}
 
 /* ── Аудит ── */
-.audit-action{font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:#e8ecf2;color:#444}
+.audit-action{font-size:11px;font-weight:700;padding:3px 9px;border-radius:var(--r-sm);background:var(--c-border);color:var(--c-text2)}
+
+/* ── Плавное появление вкладок ── */
+[role=tabpanel]{animation:tabFade .2s ease}
+@keyframes tabFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:48px 20px;color:var(--c-text4)}
+.empty-state-icon{font-size:48px;margin-bottom:12px}
+.empty-state-text{font-size:16px;margin-bottom:6px;color:var(--c-text3)}
+.empty-state-hint{font-size:13px;color:var(--c-text4)}
 
 /* ── Мобильная адаптация ── */
 @media (max-width:600px){
@@ -222,8 +263,10 @@ td[title]{cursor:help}
   .dash-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
   .dash-num{font-size:28px}
   .students-grid{grid-template-columns:1fr}
-  .modal-box{padding:20px;max-width:100%}
+  .modal-box{padding:20px;max-width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0;position:fixed;bottom:0;max-height:85vh}
   .stat-summary .sn{font-size:26px}
+  .tabs{-webkit-overflow-scrolling:touch}
+  .tab{padding:10px 12px;font-size:12px}
 }
 </style>
 </head>
@@ -285,12 +328,28 @@ td[title]{cursor:help}
 <div id="tab-students" role="tabpanel" aria-label="Ученики" style="display:none">
   <div class="card no-print">
     <h2 style="margin-bottom:16px">➕ Добавить ученика</h2>
-    <div class="form-row">
-      <div class="field" id="field-name" style="flex:2;min-width:180px">
-        <label>Имя ученика <span class="req">*</span></label>
-        <input id="f-name" type="text" placeholder="Алия Иванова" required autocomplete="name">
-        <span class="error-msg">Введите имя ученика</span>
+    <div class="form-section">
+      <div class="form-section-title">Ученик</div>
+      <div class="form-row">
+        <div class="field" id="field-name" style="flex:2;min-width:180px">
+          <label>Имя ученика <span class="req">*</span></label>
+          <input id="f-name" type="text" placeholder="Алия Иванова" required autocomplete="name">
+          <span class="error-msg">Введите имя ученика</span>
+        </div>
+        <div class="field">
+          <label>Группа</label>
+          <select id="f-group"><option value="">— без группы —</option></select>
+        </div>
+        <div class="field">
+          <label>Дата согласия ПД</label>
+          <input id="f-consent" type="date">
+          <span class="hint">Обязательно для GDPR</span>
+        </div>
       </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Контакты родителя</div>
+      <div class="form-row">
       <div class="field" id="field-phone">
         <label>Телефон WhatsApp <span class="tip">только цифры</span></label>
         <input id="f-phone" type="tel" placeholder="77001234567" pattern="[0-9]{10,15}" inputmode="numeric" autocomplete="tel">
@@ -306,21 +365,13 @@ td[title]{cursor:help}
         <input id="f-tg" placeholder="123456789" pattern="[0-9]+" inputmode="numeric">
         <span class="error-msg">Только цифры</span>
       </div>
-      <div class="field">
-        <label>Группа</label>
-        <select id="f-group"><option value="">— без группы —</option></select>
-      </div>
       <div class="field" id="field-email">
         <label>Email родителя</label>
         <input id="f-email" type="email" placeholder="parent@mail.ru" autocomplete="email">
         <span class="error-msg">Некорректный email</span>
         <span class="hint">Для email-уведомлений</span>
       </div>
-      <div class="field">
-        <label>Дата согласия ПД</label>
-        <input id="f-consent" type="date">
-        <span class="hint">Обязательно для GDPR</span>
-      </div>
+    </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-primary" id="add-btn" onclick="addStudent()">Добавить ученика</button>
@@ -689,15 +740,34 @@ document.addEventListener('keydown', e => {
 // ════════════════════════════════════════════════════════════════
 // МОДАЛКИ (a11y: ESC close, backdrop click, focus trap)
 // ════════════════════════════════════════════════════════════════
+let _previousFocus = null;
+function _trapFocus(modal) {
+  const focusable = modal.querySelectorAll('button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])');
+  if (focusable.length) focusable[0].focus();
+}
+function openModal(id) {
+  _previousFocus = document.activeElement;
+  const m = document.getElementById(id);
+  m.classList.add('show');
+  _trapFocus(m.querySelector('.modal-box'));
+}
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    const open = document.querySelector('.modal.show');
-    if (open) { open.classList.remove('show'); e.preventDefault(); }
+  const open = document.querySelector('.modal.show');
+  if (!open) return;
+  if (e.key === 'Escape') { open.classList.remove('show'); if (_previousFocus) _previousFocus.focus(); e.preventDefault(); return; }
+  if (e.key === 'Tab') {
+    const box = open.querySelector('.modal-box');
+    const focusable = [...box.querySelectorAll('button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])')];
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length-1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 });
 document.addEventListener('click', e => {
   if (e.target.classList.contains('modal') && e.target.classList.contains('show')) {
     e.target.classList.remove('show');
+    if (_previousFocus) _previousFocus.focus();
   }
 });
 
@@ -714,8 +784,8 @@ function confirmDialog({icon='⚠️', title='Подтвердите', text='', 
     yesBtn.className = 'btn ' + yesClass;
     document.getElementById('confirm-no').textContent = noLabel;
     const modal = document.getElementById('confirm-modal');
-    modal.classList.add('show');
-    const cleanup = (result) => { modal.classList.remove('show'); resolve(result); };
+    openModal('confirm-modal');
+    const cleanup = (result) => { closeModal('confirm-modal'); resolve(result); };
     yesBtn.onclick = () => cleanup(true);
     document.getElementById('confirm-no').onclick = () => cleanup(false);
   });
@@ -1213,7 +1283,7 @@ async function loadStats() {
 // ════════════════════════════════════════════════════════════════
 // QR модалка (группы)
 // ════════════════════════════════════════════════════════════════
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); if (_previousFocus) _previousFocus.focus(); }
 
 async function showGroupQR(groupId) {
   const d = await api(`/api/groups/${groupId}/qr`);
