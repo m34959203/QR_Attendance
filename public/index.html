@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>QR Посещаемость — Панель учителя</title>
+<title>QR Посещаемость — Панель педагога</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e}
@@ -242,7 +242,7 @@ td[title]{cursor:help}
 <nav class="tabs" role="tablist" aria-label="Навигация">
   <button class="tab active" role="tab" aria-selected="true" aria-controls="tab-dashboard" onclick="showTab('dashboard')">📊 Сегодня</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-students" onclick="showTab('students')">👥 Ученики</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-groups" onclick="showTab('groups')">🏫 Группы</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-groups" onclick="showTab('groups')">📚 Группы</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-attendance" onclick="showTab('attendance')">📋 Журнал</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-stats" onclick="showTab('stats')">📈 Статистика</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-whatsapp" onclick="showTab('whatsapp')">📱 WhatsApp</button>
@@ -351,8 +351,8 @@ td[title]{cursor:help}
   <div class="card">
     <h2 style="margin-bottom:16px">➕ Создать группу</h2>
     <div class="form-row">
-      <div class="field" style="flex:2"><label>Название</label><input id="g-name" placeholder="7А класс"></div>
-      <div class="field"><label>Начало урока</label><input id="g-start" type="time" value="09:00"></div>
+      <div class="field" style="flex:2"><label>Название</label><input id="g-name" placeholder="Робототехника (пн/ср)"></div>
+      <div class="field"><label>Начало занятия</label><input id="g-start" type="time" value="15:00"></div>
       <div class="field"><label>Порог опоздания (мин)</label><input id="g-late" type="number" value="10" min="1" max="120"></div>
       <button class="btn btn-primary" onclick="addGroup()">Создать</button>
     </div>
@@ -500,7 +500,7 @@ td[title]{cursor:help}
     <ol style="padding-left:20px;line-height:2.1;font-size:14px;color:#555">
       <li>Родитель находит бота и пишет <code>/start</code></li>
       <li>Бот отвечает с chat_id</li>
-      <li>Учитель вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
+      <li>Педагог вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
     </ol>
   </div>
 </div>
@@ -797,7 +797,7 @@ async function loadDashboard() {
 
   // Онбординг
   const steps = [
-    { done: d.groups > 0,   icon:'🏫', text:'Создать группу (класс/секцию)' },
+    { done: d.groups > 0,   icon:'📚', text:'Создать группу (кружок/секцию)' },
     { done: d.students > 0, icon:'👥', text:'Добавить учеников' },
     { done: waOk,           icon:'📱', text:'Подключить WhatsApp' },
   ];
@@ -839,7 +839,7 @@ async function loadDashboard() {
     { icon:'👥', num: s.total||0,   lbl:'Учеников', cls:'' },
     { icon:'✅', num: s.present||0, lbl:'Пришли', cls:'dash-ok' },
     { icon:'⚠️', num: s.late||0,    lbl:'Опозданий', cls: s.late ? 'dash-warn' : '' },
-    { icon:'🏫', num: d.groups||0,  lbl:'Групп', cls:'' },
+    { icon:'📚', num: d.groups||0,  lbl:'Групп', cls:'' },
     { icon:'📧', num: d.email?.ready ? '✅' : '—', lbl:'Email', cls:'' },
   ].map(c => `<div class="dash-card ${c.cls}">
     <div class="dash-icon">${c.icon}</div>
@@ -887,7 +887,7 @@ async function loadGroups() {
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR класса</button>
+          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR группы</button>
           <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${esc(g.name)}')">📢 Рассылка</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
           <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${esc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
@@ -912,7 +912,7 @@ async function addGroup() {
 }
 async function editGroup(id,name,start,late) {
   const newName=prompt('Название:',name); if(!newName) return;
-  const newStart=prompt('Начало урока (09:00):',start);
+  const newStart=prompt('Начало занятия (15:00):',start);
   const newLate=prompt('Порог опоздания (мин):',late);
   await api(`/api/groups/${id}`,{method:'PUT',body:JSON.stringify({name:newName,lessonStartTime:newStart||'',lateMinutes:Number(newLate)||10})});
   toast('Группа обновлена ✅');
@@ -1219,7 +1219,7 @@ async function showGroupQR(groupId) {
   const d = await api(`/api/groups/${groupId}/qr`);
   if (d.error) { toast(d.error,'err'); return; }
   const pins = d.students.map(s => `<tr><td style="padding:4px 12px">${esc(s.name)}</td><td style="padding:4px 12px;font-weight:700;letter-spacing:2px;font-size:16px">${s.pin}</td></tr>`).join('');
-  document.getElementById('qr-name').textContent = d.group.name + ' — QR класса';
+  document.getElementById('qr-name').textContent = d.group.name + ' — QR группы';
   document.getElementById('qr-img').src = d.qrImage;
   document.getElementById('qr-url').textContent = d.url;
   document.getElementById('qr-modal').classList.add('show');
@@ -1302,7 +1302,7 @@ td{padding:4px 8px;vertical-align:top}
 
 <p><b>Цели обработки:</b> автоматическое уведомление родителей о приходе ребёнка на занятие, учёт посещаемости, информирование об опозданиях.</p>
 
-<p><b>Срок действия согласия:</b> на период обучения ребёнка, но не более 2 лет с даты подписания. Согласие может быть отозвано в любой момент путём письменного обращения к администрации.</p>
+<p><b>Срок действия согласия:</b> на период посещения занятий ребёнком, но не более 2 лет с даты подписания. Согласие может быть отозвано в любой момент путём письменного обращения к администрации.</p>
 
 <p><b>Передача данных:</b> для отправки уведомлений используются сервисы Green API (WhatsApp) и Telegram Bot API. Передаётся только номер телефона и текст уведомления.</p>
 
@@ -1493,7 +1493,8 @@ async function loadAudit() {
   const actionLabels = {
     create:'➕ Создание', update:'✏️ Изменение', delete:'🗑 Удаление',
     archive:'📦 Архив', gdpr_delete:'⚠️ GDPR удаление',
-    scan:'📱 Скан', manual:'✏️ Ручная отметка',
+    scan:'📱 Скан', scan_pin:'📱 Скан (PIN)', manual:'✏️ Ручная отметка',
+    reminder:'⏰ Напоминание',
     test_wa:'🧪 Тест WA', test_tg:'🧪 Тест TG',
     broadcast:'📢 Рассылка', import:'📥 Импорт',
     cleanup:'🧹 Очистка', duplicate:'📋 Копия',

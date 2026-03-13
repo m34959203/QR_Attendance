@@ -3,6 +3,7 @@ const express    = require('express');
 const rateLimit  = require('express-rate-limit');
 const helmet     = require('helmet');
 const QRCode     = require('qrcode');
+const crypto     = require('crypto');
 const fs         = require('fs');
 const path       = require('path');
 const db         = require('./db');
@@ -11,6 +12,7 @@ const tg         = require('./telegram');
 const em         = require('./email');
 const config     = require('./config');
 const { autoClean } = require('./cleanup');
+const reminders = require('./reminders');
 const { validateStudent, validateGroup, validatePhone, validateMessage } = require('./validate');
 
 const app = express();
@@ -38,6 +40,16 @@ app.use(helmet({
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// HTTPS enforce: редирект на HTTPS если BASE_URL начинается с https
+if (config.BASE_URL.startsWith('https://')) {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] === 'http') {
+      return res.redirect(301, `https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
+}
 
 // ── Логирование ошибок ────────────────────────────────────────────────────────
 const LOG_FILE = path.join(__dirname, '../data/error.log');
@@ -100,7 +112,10 @@ const authGuard = [authFailLimiter, (req, res, next) => {
   if (auth) {
     const [, enc] = auth.split(' ');
     const [, pwd] = Buffer.from(enc || '', 'base64').toString().split(':');
-    if (pwd === config.ADMIN_PASSWORD) {
+    // Timing-safe сравнение пароля
+    const a = Buffer.from(pwd || '');
+    const b = Buffer.from(config.ADMIN_PASSWORD);
+    if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
       req.adminIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
       return next();
     }
@@ -111,6 +126,19 @@ const authGuard = [authFailLimiter, (req, res, next) => {
 
 app.use('/admin', ...authGuard);
 app.use('/api',   ...authGuard);
+
+// CSRF защита: проверка Origin для мутирующих запросов
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
+    const origin = req.headers.origin || req.headers.referer || '';
+    const allowed = config.BASE_URL;
+    if (origin && !origin.startsWith(allowed) && !origin.startsWith('http://localhost') && !origin.startsWith('http://127.0.0.1')) {
+      return res.status(403).json({ error: 'Запрос отклонён (CSRF)' });
+    }
+  }
+  next();
+});
+
 app.use('/api', (req, res, next) => {
   if (!db.isReady()) return res.status(503).json({ error: 'База данных ещё не готова. Попробуйте через несколько секунд.' });
   if (['POST', 'PUT', 'DELETE'].includes(req.method)) return apiWriteLimiter(req, res, next);
@@ -131,15 +159,30 @@ app.use(express.static('public'));
   try { await wa.init(); } catch (e) { logError('wa.init: ' + e.message); }
   try { await tg.init(); } catch (e) { logError('tg.init: ' + e.message); }
   autoClean();
+  reminders.start();
 
   // Делаем бэкап при старте (не чаще раза в день)
   try { const r = db.backup(); if (!r.skipped) console.log('💾 Бэкап при старте:', r.file); }
   catch (e) { logError('backup at start: ' + e.message); }
 
-  app.listen(config.PORT, () => {
+  const server = app.listen(config.PORT, () => {
     console.log(`\n🚀 http://localhost:${config.PORT}/admin`);
-    console.log(`🏫 ${config.SCHOOL_NAME}\n`);
+    console.log(`🎓 ${config.SCHOOL_NAME}\n`);
   });
+
+  // Graceful shutdown
+  const shutdown = (signal) => {
+    console.log(`\n⏹ ${signal} получен, завершение...`);
+    reminders.stop();
+    server.close(() => {
+      console.log('✅ Сервер остановлен');
+      process.exit(0);
+    });
+    // Принудительный выход через 10 сек
+    setTimeout(() => process.exit(1), 10000).unref();
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT',  () => shutdown('SIGINT'));
 })().catch(e => {
   console.error('💀 Критическая ошибка при запуске:', e);
   process.exit(1);
@@ -180,7 +223,7 @@ app.post('/g/:groupId', scanLimiter, async (req, res) => {
     // WhatsApp
     if (student.parentPhone) {
       wa.send(student.parentPhone,
-        `[${school}]\n👋 Здравствуйте, ${student.parentName}!\n\n✅ ${student.name} пришёл(а) на урок.\n🕐 ${time}\n📅 ${date}${lateNote}`,
+        `[${school}]\n👋 Здравствуйте, ${student.parentName}!\n\n✅ ${student.name} пришёл(а) на занятие.\n🕐 ${time}\n📅 ${date}${lateNote}`,
         student.name);
     }
 
@@ -349,7 +392,7 @@ app.post('/api/groups/:id/broadcast', async (req, res) => {
       catch { failed++; }
     }
     if (s.parentEmail) {
-      await em.send(s.parentEmail, `[${config.SCHOOL_NAME}] Сообщение от учителя`,
+      await em.send(s.parentEmail, `[${config.SCHOOL_NAME}] Сообщение от педагога`,
         `<p>👋 ${esc(s.parentName)},</p><p>${esc(message)}</p>`).catch(() => failed++);
     }
   }
@@ -524,7 +567,7 @@ app.post('/api/whatsapp/test', async (req, res) => {
   if (phoneErr) return res.status(400).json({ error: phoneErr });
   const phone = String(req.body.phone).replace(/\D/g, '');
   try {
-    await wa.sendDirect(phone, `[${config.SCHOOL_NAME}] ✅ Тестовое сообщение от QR-системы посещаемости. Всё работает!`);
+    await wa.sendDirect(phone, `[${config.SCHOOL_NAME}] ✅ Тестовое сообщение от системы посещаемости. Всё работает!`);
     db.audit('test_wa', 'whatsapp', '', phone, req.adminIp);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -560,7 +603,7 @@ app.post('/api/telegram/test', async (req, res) => {
   const { chatId } = req.body;
   if (!chatId) return res.status(400).json({ error: 'Укажите chat_id' });
   try {
-    await tg.sendMessage(chatId, `[<b>${esc(config.SCHOOL_NAME)}</b>] ✅ Тестовое сообщение от QR-системы посещаемости. Всё работает!`);
+    await tg.sendMessage(chatId, `[<b>${esc(config.SCHOOL_NAME)}</b>] ✅ Тестовое сообщение от системы посещаемости. Всё работает!`);
     db.audit('test_tg', 'telegram', '', String(chatId), req.adminIp);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

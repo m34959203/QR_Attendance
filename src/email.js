@@ -54,7 +54,7 @@ async function sendArrival({ to, parentName, studentName, time, date, isLate, mi
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
   <div style="background:linear-gradient(135deg,#2E5FA3,#4472C4);padding:24px;text-align:center">
     <h2 style="color:#fff;margin:0;font-size:22px">🎓 ${school}</h2>
-    <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:13px">Система учёта посещаемости</p>
+    <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:13px">Система посещаемости</p>
   </div>
   <div style="padding:24px">
     <p style="font-size:16px;color:#333;margin-bottom:16px">Здравствуйте, <b>${parentName}</b>!</p>
@@ -72,8 +72,8 @@ async function sendArrival({ to, parentName, studentName, time, date, isLate, mi
     </div>
   </div>
   <div style="padding:14px 24px;background:#f7f9fc;text-align:center;font-size:11px;color:#aaa">
-    Вы получаете это письмо т.к. являетесь родителем ученика ${school}.
-    Для отписки обратитесь к учителю.
+    Вы получаете это письмо т.к. ваш ребёнок посещает занятия ${school}.
+    Для отписки обратитесь к педагогу.
   </div>
 </div>
 </body></html>`;
