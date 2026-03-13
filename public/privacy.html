@@ -53,6 +53,7 @@ td{padding:10px 14px;border-bottom:1px solid #f0f2f5}
     <tr><td>Номер телефона (WhatsApp)</td><td>Родитель</td><td>Отправка уведомлений о приходе</td></tr>
     <tr><td>ФИО родителя</td><td>Родитель</td><td>Персонализация уведомлений</td></tr>
     <tr><td>Telegram chat_id</td><td>Родитель</td><td>Отправка уведомлений через Telegram</td></tr>
+    <tr><td>Email адрес</td><td>Родитель</td><td>Отправка уведомлений по электронной почте</td></tr>
     <tr><td>Дата и время прихода</td><td>Ученик</td><td>Учёт посещаемости</td></tr>
     <tr><td>Наличие/время опоздания</td><td>Ученик</td><td>Уведомление родителей об опоздании</td></tr>
   </table>
@@ -63,6 +64,7 @@ td{padding:10px 14px;border-bottom:1px solid #f0f2f5}
   <h2>3. Цели обработки данных</h2>
   <ul>
     <li>Автоматическое уведомление родителей о приходе ребёнка на занятие</li>
+    <li>Напоминание родителям за 1 час до начала занятия</li>
     <li>Учёт посещаемости и формирование отчётов</li>
     <li>Информирование об опозданиях</li>
   </ul>
@@ -74,10 +76,11 @@ td{padding:10px 14px;border-bottom:1px solid #f0f2f5}
   <p>Для отправки уведомлений используются внешние сервисы:</p>
   <table>
     <tr><th>Сервис</th><th>Назначение</th><th>Политика</th></tr>
-    <tr><td>Green API</td><td>Отправка WhatsApp сообщений</td><td>green-api.com/privacy</td></tr>
+    <tr><td>WhatsApp (Baileys / Green API / Twilio)</td><td>Отправка WhatsApp сообщений</td><td>Зависит от провайдера</td></tr>
     <tr><td>Telegram</td><td>Отправка Telegram сообщений</td><td>telegram.org/privacy</td></tr>
+    <tr><td>SMTP-сервер (Gmail, Yandex и др.)</td><td>Отправка Email уведомлений</td><td>Зависит от провайдера</td></tr>
   </table>
-  <p>Передача данных осуществляется в минимально необходимом объёме: номер телефона и текст уведомления.</p>
+  <p>Передача данных осуществляется в минимально необходимом объёме: номер телефона / chat_id / email и текст уведомления.</p>
 </div>
 
 <div class="card">
@@ -120,7 +123,7 @@ td{padding:10px 14px;border-bottom:1px solid #f0f2f5}
   <div class="contact">
     <p>По вопросам обработки персональных данных:</p>
     <p>📧 Обратитесь к администратору учебного центра</p>
-    <p style="margin-top:12px;font-size:13px;color:#888">Документ обновлён: 2025</p>
+    <p style="margin-top:12px;font-size:13px;color:#888">Документ обновлён: март 2026</p>
   </div>
 </div>
 

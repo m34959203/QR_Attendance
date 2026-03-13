@@ -97,10 +97,10 @@ async function _handleUpdate(update) {
   if (text.startsWith('/start')) {
     await sendMessage(chatId,
       `👋 Здравствуйте, ${fromName}!\n\n` +
-      `Это бот уведомлений об уроках.\n\n` +
+      `Это бот уведомлений о занятиях.\n\n` +
       `Ваш <b>код подключения</b> (chat_id):\n\n` +
       `<code>${chatId}</code>\n\n` +
-      `Передайте этот код учителю — он введёт его в карточку ученика.`
+      `Передайте этот код педагогу — он введёт его в карточку ученика.`
     );
     return;
   }
@@ -119,9 +119,9 @@ async function _handleUpdate(update) {
         db.updateStudent(s.id, { telegramStopAt: new Date().toISOString() });
       }
       await sendMessage(chatId,
-        `🚫 Вы отписались от уведомлений.\n\nЧтобы снова получать уведомления, напишите /start и передайте код учителю.`);
+        `🚫 Вы отписались от уведомлений.\n\nЧтобы снова получать уведомления, напишите /start и передайте код педагогу.`);
     } else {
-      await sendMessage(chatId, `ℹ️ Ваш аккаунт не привязан ни к одному ученику. Обратитесь к учителю.`);
+      await sendMessage(chatId, `ℹ️ Ваш аккаунт не привязан ни к одному ученику. Обратитесь к педагогу.`);
     }
     return;
   }

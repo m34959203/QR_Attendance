@@ -1,7 +1,7 @@
 {
   "name": "qr-attendance",
-  "version": "1.1.0",
-  "description": "Система контроля посещаемости учеников через QR-код с уведомлениями в WhatsApp и Telegram",
+  "version": "1.2.0",
+  "description": "Система посещаемости для кружков и учебных центров — QR + PIN, уведомления в WhatsApp / Telegram / Email",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -13,7 +13,11 @@
     "qr",
     "whatsapp",
     "telegram",
-    "school"
+    "school",
+    "clubs",
+    "education",
+    "notifications",
+    "email"
   ],
   "author": "",
   "license": "ISC",

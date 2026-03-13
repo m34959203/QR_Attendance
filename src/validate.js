@@ -53,7 +53,7 @@ function validateGroup(body) {
   }
 
   if (body.lessonStartTime && !TIME_RE.test(body.lessonStartTime)) {
-    errors.push('Время начала урока — формат ЧЧ:ММ');
+    errors.push('Время начала занятия — формат ЧЧ:ММ');
   }
 
   if (body.lateMinutes !== undefined) {

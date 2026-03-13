@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>QR Посещаемость — Панель учителя</title>
+<title>QR Посещаемость — Панель педагога</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a2e}
@@ -16,27 +16,28 @@ header h1{color:#fff;font-size:17px;font-weight:700}
 .wa-badge{display:flex;align-items:center;gap:7px;cursor:pointer;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px}
 .wa-badge span{color:#fff;font-size:12px;font-weight:500}
 
-/* ── Вкладки ── */
+/* ── Вкладки (a11y: role=tablist) ── */
 .tabs{background:#fff;display:flex;overflow-x:auto;border-bottom:2px solid #e8ecf2;padding:0 12px;position:sticky;top:49px;z-index:40}
-.tab{padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.15s}
+.tab{padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:#666;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.15s;border:none;background:none;min-height:44px}
+.tab:focus-visible{outline:2px solid #4472C4;outline-offset:-2px;border-radius:4px}
 .tab.active{color:#2E5FA3;border-bottom-color:#2E5FA3}
-.tab:hover:not(.active){color:#555}
+.tab:hover:not(.active){color:#444}
 
 /* ── Контент ── */
-.content{padding:18px;max-width:1200px;margin:0 auto}
-.card{background:#fff;border-radius:14px;padding:22px 24px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.content{padding:20px;max-width:1200px;margin:0 auto}
+.card{background:#fff;border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 
 /* ── Дашборд ── */
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-bottom:20px}
 .dash-card{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 .dash-num{font-size:36px;font-weight:800;color:#2E5FA3;line-height:1}
-.dash-lbl{font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
+.dash-lbl{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-top:6px}
 .dash-icon{font-size:28px;margin-bottom:8px}
-.dash-ok .dash-num{color:#27ae60}
-.dash-warn .dash-num{color:#e53935}
+.dash-ok .dash-num{color:#1e8449}
+.dash-warn .dash-num{color:#c62828}
 
 /* ── Онбординг ── */
-.onboard{background:linear-gradient(135deg,#667eea15,#764ba215);border:2px dashed #667eea50;border-radius:14px;padding:28px;text-align:center;margin-bottom:18px}
+.onboard{background:linear-gradient(135deg,#667eea15,#764ba215);border:2px dashed #667eea50;border-radius:14px;padding:28px;text-align:center;margin-bottom:20px}
 .onboard h2{color:#2E5FA3;margin-bottom:16px;font-size:20px}
 .checklist{display:flex;flex-direction:column;gap:10px;text-align:left;max-width:420px;margin:0 auto 20px}
 .check-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
@@ -44,63 +45,70 @@ header h1{color:#fff;font-size:17px;font-weight:700}
 .check-item .text{font-size:14px;color:#333}
 
 /* ── Формы ── */
-.form-row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.form-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
 .field{display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1;position:relative}
-.field label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
-.field label .tip{font-size:11px;color:#aaa;font-weight:400;text-transform:none}
-input[type=text],input[type=time],input[type=number],input[type=date],input[type=tel],select,textarea{border:1.5px solid #e0e4ec;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;background:#fff;width:100%;font-family:inherit;transition:.15s}
+.field label{font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
+.field label .req{color:#c62828;font-weight:700}
+.field label .tip{font-size:11px;color:#777;font-weight:400;text-transform:none}
+input[type=text],input[type=time],input[type=number],input[type=date],input[type=tel],input[type=email],select,textarea{border:1.5px solid #e0e4ec;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff;width:100%;font-family:inherit;transition:.15s}
 input:focus,select:focus,textarea:focus{border-color:#4472C4;box-shadow:0 0 0 3px rgba(68,114,196,.12)}
-input:invalid{border-color:#e53935}
-.field .hint{font-size:11px;color:#aaa;margin-top:3px}
+.field-error input,.field-error select,.field-error textarea{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.1)}
+.field .error-msg{font-size:11px;color:#c62828;margin-top:2px;display:none}
+.field-error .error-msg{display:block}
+.field .hint{font-size:12px;color:#777;margin-top:3px}
 
 /* ── Кнопки ── */
-.btn{padding:9px 18px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn{padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px}
+.btn:focus-visible{outline:2px solid #4472C4;outline-offset:2px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-primary{background:#2E5FA3;color:#fff}
 .btn-primary:hover:not(:disabled){background:#224880}
 .btn-outline{background:#fff;color:#2E5FA3;border:1.5px solid #2E5FA3}
-.btn-outline:hover{background:#f0f4fa}
-.btn-danger{background:#fff;color:#e53935;border:1.5px solid #e53935}
-.btn-danger:hover{background:#fff5f5}
-.btn-success{background:#27ae60;color:#fff}
-.btn-success:hover{background:#1e8449}
-.btn-warn{background:#fff;color:#e65100;border:1.5px solid #ff9800}
-.btn-warn:hover{background:#fff8f0}
-.btn-sm{padding:6px 13px;font-size:12px;border-radius:8px}
+.btn-outline:hover:not(:disabled){background:#f0f4fa}
+.btn-danger{background:#fff;color:#c62828;border:1.5px solid #c62828}
+.btn-danger:hover:not(:disabled){background:#fff5f5}
+.btn-success{background:#1e8449;color:#fff}
+.btn-success:hover:not(:disabled){background:#176437}
+.btn-warn{background:#fff;color:#bf360c;border:1.5px solid #e65100}
+.btn-warn:hover:not(:disabled){background:#fff8f0}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px;min-height:36px}
 
 /* ── Статус точки ── */
-.dot{width:9px;height:9px;border-radius:50%;background:#ccc;flex-shrink:0}
-.dot.ready{background:#27ae60;box-shadow:0 0 0 3px rgba(39,174,96,.2)}
-.dot.warn{background:#f39c12}
-.dot.err{background:#e53935}
+.dot{width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0}
+.dot.ready{background:#1e8449;box-shadow:0 0 0 3px rgba(30,132,73,.2)}
+.dot.warn{background:#e65100}
+.dot.err{background:#c62828}
 
-/* ── Уведомление ── */
-.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;z-index:1000;transform:translateY(100px);opacity:0;transition:.3s;max-width:300px}
+/* ── Уведомление (toast) ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:500;z-index:1000;transform:translateY(100px);opacity:0;transition:.3s;max-width:360px;display:flex;align-items:center;gap:10px}
 .toast.show{transform:translateY(0);opacity:1}
-.toast.ok{background:#27ae60}
-.toast.err{background:#e53935}
+.toast.ok{background:#1e8449}
+.toast.err{background:#c62828}
+.toast .toast-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 0 0 8px;opacity:.7}
+.toast .toast-close:hover{opacity:1}
 
 /* ── Карточки учеников ── */
-.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.student-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1.5px solid #e8ecf2;transition:.2s;position:relative}
+.students-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.student-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1.5px solid #e8ecf2;transition:.2s;position:relative}
 .student-card:hover{border-color:#4472C4;box-shadow:0 4px 16px rgba(46,95,163,.1)}
-.student-card.no-consent{border-color:#ff980050;background:#fff8f0}
+.student-card.no-consent{border-color:#e6510050;background:#fff8f0}
 .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;margin-bottom:10px}
 .student-card h3{font-size:15px;margin-bottom:5px}
-.meta{font-size:12px;color:#888;line-height:1.8;margin-bottom:10px}
-.channels{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
-.ch{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px}
-.ch-wa{background:#e8f5e9;color:#2e7d32}
-.ch-tg{background:#e3f2fd;color:#1565c0}
-.ch-late{background:#fff3e0;color:#e65100}
-.actions{display:flex;gap:5px;flex-wrap:wrap}
-.consent-badge{position:absolute;top:12px;right:12px;font-size:10px;padding:2px 7px;border-radius:8px}
-.consent-ok{background:#e8f5e9;color:#2e7d32}
-.consent-no{background:#fff3e0;color:#e65100}
+.meta{font-size:12px;color:#666;line-height:1.8;margin-bottom:10px}
+.channels{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.ch{font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px}
+.ch-wa{background:#e8f5e9;color:#1b5e20}
+.ch-tg{background:#e3f2fd;color:#0d47a1}
+.ch-late{background:#fff3e0;color:#bf360c}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.consent-badge{position:absolute;top:12px;right:12px;font-size:10px;padding:3px 8px;border-radius:8px;font-weight:600}
+.consent-ok{background:#e8f5e9;color:#1b5e20}
+.consent-no{background:#fff3e0;color:#bf360c}
 
 /* ── Фильтры-чипы ── */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e4ec;background:#fff;color:#666;transition:.15s}
+.chip{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #e0e4ec;background:#fff;color:#555;transition:.15s;min-height:36px;display:inline-flex;align-items:center}
+.chip:focus-visible{outline:2px solid #4472C4;outline-offset:2px}
 .chip.active{background:#2E5FA3;color:#fff;border-color:#2E5FA3}
 .chip:hover:not(.active){border-color:#4472C4;color:#2E5FA3}
 
@@ -112,54 +120,69 @@ input:invalid{border-color:#e53935}
 /* ── Таблица ── */
 .table-wrap{overflow-x:auto;border-radius:12px;border:1.5px solid #e8ecf2}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:#f7f9fc;padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:#888;letter-spacing:.4px;border-bottom:1.5px solid #e8ecf2;cursor:pointer;user-select:none;white-space:nowrap}
+th{background:#f7f9fc;padding:12px 14px;text-align:left;font-size:11px;text-transform:uppercase;color:#666;letter-spacing:.4px;border-bottom:1.5px solid #e8ecf2;cursor:pointer;user-select:none;white-space:nowrap}
 th:hover{color:#2E5FA3}
-th.sort-asc::after{content:' ▲'}
-th.sort-desc::after{content:' ▼'}
-td{padding:10px 14px;border-bottom:1px solid #f0f2f5;color:#333}
+th.sort-asc{color:#2E5FA3}
+th.sort-asc::after{content:' ▲';color:#2E5FA3}
+th.sort-desc{color:#2E5FA3}
+th.sort-desc::after{content:' ▼';color:#2E5FA3}
+td{padding:12px 14px;border-bottom:1px solid #f0f2f5;color:#333}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafbfd}
+td[title]{cursor:help}
+
+/* ── Скелетон загрузки ── */
+.skeleton{background:linear-gradient(90deg,#f0f2f5 25%,#e8ecf2 50%,#f0f2f5 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;height:16px;display:inline-block}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-row td{padding:14px}
+.skeleton-row .skeleton{width:80%;height:14px}
 
 /* ── Бейджи ── */
 .badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
-.b-ok{background:#e8f5e9;color:#2e7d32}
-.b-late{background:#fce4ec;color:#c62828}
-.b-sick{background:#e3f2fd;color:#1565c0}
-.b-valid{background:#f3e5f5;color:#6a1b9a}
-.b-warn{background:#fff3e0;color:#e65100}
-.b-err{background:#fce4ec;color:#c62828}
-.b-q{background:#fffde7;color:#f57f17}
+.b-ok{background:#e8f5e9;color:#1b5e20}
+.b-late{background:#fce4ec;color:#b71c1c}
+.b-sick{background:#e3f2fd;color:#0d47a1}
+.b-valid{background:#f3e5f5;color:#4a148c}
+.b-warn{background:#fff3e0;color:#bf360c}
+.b-err{background:#fce4ec;color:#b71c1c}
+.b-q{background:#fffde7;color:#e65100}
 
 /* ── Статистика ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 .stat-card{background:#f7f9fc;border-radius:12px;padding:16px;text-align:center;border:1.5px solid #e8ecf2}
-.stat-card .month{font-size:12px;color:#888;margin-bottom:8px}
+.stat-card .month{font-size:12px;color:#666;margin-bottom:8px}
 .stat-card .num{font-size:28px;font-weight:800;color:#2E5FA3}
 .stat-summary{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:20px}
 .stat-summary .s{text-align:center}
 .stat-summary .sn{font-size:34px;font-weight:800}
-.stat-summary .sl{font-size:11px;color:#aaa;text-transform:uppercase}
+.stat-summary .sl{font-size:12px;color:#666;text-transform:uppercase}
 
 /* ── QR ── */
-.print-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
-.qr-card{text-align:center;padding:18px;border:2px solid #e0e4ec;border-radius:14px;background:#fff}
+.print-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:20px}
+.qr-card{text-align:center;padding:20px;border:2px solid #e0e4ec;border-radius:14px;background:#fff}
 .qr-card h3{font-size:13px;font-weight:700;margin-top:8px;margin-bottom:3px}
-.qr-card p{font-size:10px;color:#aaa;word-break:break-all}
+.qr-card p{font-size:10px;color:#777;word-break:break-all}
 
 /* ── WA панель ── */
 .wa-stat-row{display:flex;gap:24px;flex-wrap:wrap;margin-top:16px}
 .wa-stat{text-align:center}
 .wa-stat .n{font-size:30px;font-weight:800;color:#2E5FA3}
-.wa-stat .l{font-size:11px;color:#aaa;text-transform:uppercase}
+.wa-stat .l{font-size:12px;color:#666;text-transform:uppercase}
 
-/* ── Модалка ── */
+/* ── Модалка (a11y: role=dialog, focus trap, ESC close) ── */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
 .modal.show{display:flex}
-.modal-box{background:#fff;border-radius:18px;padding:28px;max-width:420px;width:100%;text-align:center;max-height:90vh;overflow-y:auto}
+.modal-box{background:#fff;border-radius:18px;padding:28px;max-width:480px;width:100%;text-align:center;max-height:90vh;overflow-y:auto;position:relative}
 .modal-box h2{margin-bottom:8px;font-size:19px}
 .modal-box img{max-width:220px;margin:12px auto;display:block;border-radius:10px}
-.modal-url{font-size:11px;color:#aaa;word-break:break-all;margin:8px 0 16px}
+.modal-url{font-size:12px;color:#777;word-break:break-all;margin:8px 0 16px}
 .modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ── Confirm-диалог (замена native confirm) ── */
+.confirm-box{text-align:center}
+.confirm-box .confirm-icon{font-size:48px;margin-bottom:12px}
+.confirm-box .confirm-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.confirm-box .confirm-text{font-size:14px;color:#555;margin-bottom:20px;line-height:1.6}
 
 /* ── Лог строки ── */
 .log-sent td{background:#f1faf5}
@@ -168,26 +191,40 @@ tr:hover td{background:#fafbfd}
 
 /* ── Дата-фильтр ── */
 .date-filter{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.date-filter label{font-size:12px;color:#888;font-weight:600}
+.date-filter label{font-size:12px;color:#666;font-weight:600}
 
 /* ── Печать ── */
 @media print{
   header,.tabs,.no-print{display:none!important}
   .print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .qr-card{break-inside:avoid}
+  .content{padding:0}
 }
 
 /* ── Тест-блок ── */
 .test-block{background:#f7f9fc;border-radius:12px;padding:16px;margin-top:16px}
-.test-block h3{font-size:14px;margin-bottom:12px;color:#555}
+.test-block h3{font-size:14px;margin-bottom:12px;color:#444}
 
 /* ── Импорт ── */
 .import-zone{border:2px dashed #c8d6e8;border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s}
-.import-zone:hover{border-color:#4472C4;background:#f0f4fa}
-.import-zone p{color:#888;font-size:14px}
+.import-zone:hover,.import-zone:focus-within{border-color:#4472C4;background:#f0f4fa}
+.import-zone p{color:#666;font-size:14px}
 
 /* ── Аудит ── */
-.audit-action{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:#e8ecf2;color:#555}
+.audit-action{font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px;background:#e8ecf2;color:#444}
+
+/* ── Мобильная адаптация ── */
+@media (max-width:600px){
+  .content{padding:12px}
+  .card{padding:16px}
+  .form-row{gap:8px}
+  .field{min-width:100%}
+  .dash-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+  .dash-num{font-size:28px}
+  .students-grid{grid-template-columns:1fr}
+  .modal-box{padding:20px;max-width:100%}
+  .stat-summary .sn{font-size:26px}
+}
 </style>
 </head>
 <body>
@@ -202,23 +239,23 @@ tr:hover td{background:#fafbfd}
   </div>
 </header>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab('dashboard')">📊 Сегодня</div>
-  <div class="tab" onclick="showTab('students')">👥 Ученики</div>
-  <div class="tab" onclick="showTab('groups')">🏫 Группы</div>
-  <div class="tab" onclick="showTab('attendance')">📋 Журнал</div>
-  <div class="tab" onclick="showTab('stats')">📈 Статистика</div>
-  <div class="tab" onclick="showTab('whatsapp')">📱 WhatsApp</div>
-  <div class="tab" onclick="showTab('telegram')">📨 Telegram</div>
-  <div class="tab" onclick="showTab('audit')">🔍 Аудит</div>
-  <div class="tab" onclick="showTab('email')">📧 Email</div>
-  <div class="tab" onclick="showTab('errors')">⚠️ Ошибки</div>
-</div>
+<nav class="tabs" role="tablist" aria-label="Навигация">
+  <button class="tab active" role="tab" aria-selected="true" aria-controls="tab-dashboard" onclick="showTab('dashboard')">📊 Сегодня</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-students" onclick="showTab('students')">👥 Ученики</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-groups" onclick="showTab('groups')">📚 Группы</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-attendance" onclick="showTab('attendance')">📋 Журнал</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-stats" onclick="showTab('stats')">📈 Статистика</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-whatsapp" onclick="showTab('whatsapp')">📱 WhatsApp</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-telegram" onclick="showTab('telegram')">📨 Telegram</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-audit" onclick="showTab('audit')">🔍 Аудит</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-email" onclick="showTab('email')">📧 Email</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-errors" onclick="showTab('errors')">⚠️ Ошибки</button>
+</nav>
 
 <div class="content">
 
 <!-- ══════════════════════════════ ДАШБОРД ══════════════════════════════ -->
-<div id="tab-dashboard">
+<div id="tab-dashboard" role="tabpanel" aria-label="Сегодня">
   <div id="dash-onboard" style="display:none" class="onboard">
     <h2>👋 Добро пожаловать!</h2>
     <p style="color:#666;margin-bottom:20px;font-size:14px">Система готова к работе. Выполните несколько шагов для начала:</p>
@@ -235,7 +272,7 @@ tr:hover td{background:#fafbfd}
   <div class="card no-print">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3>Последние сканирования</h3>
-      <button class="btn btn-outline btn-sm" onclick="loadDashboard()">🔄</button>
+      <button class="btn btn-outline btn-sm" onclick="loadDashboard()" aria-label="Обновить">🔄</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Ученик</th><th>Группа</th><th>Время</th><th>Статус</th></tr></thead>
@@ -245,34 +282,38 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ УЧЕНИКИ ══════════════════════════════ -->
-<div id="tab-students" style="display:none">
+<div id="tab-students" role="tabpanel" aria-label="Ученики" style="display:none">
   <div class="card no-print">
     <h2 style="margin-bottom:16px">➕ Добавить ученика</h2>
     <div class="form-row">
-      <div class="field" style="flex:2;min-width:180px">
-        <label>Имя ученика</label>
-        <input id="f-name" type="text" placeholder="Алия Иванова" required>
+      <div class="field" id="field-name" style="flex:2;min-width:180px">
+        <label>Имя ученика <span class="req">*</span></label>
+        <input id="f-name" type="text" placeholder="Алия Иванова" required autocomplete="name">
+        <span class="error-msg">Введите имя ученика</span>
       </div>
-      <div class="field">
+      <div class="field" id="field-phone">
         <label>Телефон WhatsApp <span class="tip">только цифры</span></label>
-        <input id="f-phone" type="tel" placeholder="77001234567">
-        <span class="hint">77001234567</span>
+        <input id="f-phone" type="tel" placeholder="77001234567" pattern="[0-9]{10,15}" inputmode="numeric" autocomplete="tel">
+        <span class="error-msg">Только цифры, 10-15 символов</span>
+        <span class="hint">Формат: 77001234567</span>
       </div>
       <div class="field">
         <label>Имя родителя</label>
-        <input id="f-parent" placeholder="Гульнара апай">
+        <input id="f-parent" placeholder="Гульнара апай" autocomplete="off">
       </div>
-      <div class="field">
+      <div class="field" id="field-tg">
         <label>Telegram chat_id <span class="tip">от /start</span></label>
-        <input id="f-tg" placeholder="123456789">
+        <input id="f-tg" placeholder="123456789" pattern="[0-9]+" inputmode="numeric">
+        <span class="error-msg">Только цифры</span>
       </div>
       <div class="field">
         <label>Группа</label>
         <select id="f-group"><option value="">— без группы —</option></select>
       </div>
-      <div class="field">
+      <div class="field" id="field-email">
         <label>Email родителя</label>
-        <input id="f-email" type="email" placeholder="parent@mail.ru">
+        <input id="f-email" type="email" placeholder="parent@mail.ru" autocomplete="email">
+        <span class="error-msg">Некорректный email</span>
         <span class="hint">Для email-уведомлений</span>
       </div>
       <div class="field">
@@ -297,7 +338,7 @@ tr:hover td{background:#fafbfd}
 
   <div class="no-print" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
     <div class="search-wrap">
-      <input type="text" id="student-search" placeholder="Поиск по имени..." oninput="loadStudents()" style="min-width:200px">
+      <input type="text" id="student-search" placeholder="Поиск по имени..." oninput="_debounceSearch()" style="min-width:200px" aria-label="Поиск учеников по имени">
     </div>
     <div class="chips" id="student-chips" style="margin:0"></div>
   </div>
@@ -306,12 +347,12 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ ГРУППЫ ══════════════════════════════ -->
-<div id="tab-groups" style="display:none">
+<div id="tab-groups" role="tabpanel" aria-label="Группы" style="display:none">
   <div class="card">
     <h2 style="margin-bottom:16px">➕ Создать группу</h2>
     <div class="form-row">
-      <div class="field" style="flex:2"><label>Название</label><input id="g-name" placeholder="7А класс"></div>
-      <div class="field"><label>Начало урока</label><input id="g-start" type="time" value="09:00"></div>
+      <div class="field" style="flex:2"><label>Название</label><input id="g-name" placeholder="Робототехника (пн/ср)"></div>
+      <div class="field"><label>Начало занятия</label><input id="g-start" type="time" value="15:00"></div>
       <div class="field"><label>Порог опоздания (мин)</label><input id="g-late" type="number" value="10" min="1" max="120"></div>
       <button class="btn btn-primary" onclick="addGroup()">Создать</button>
     </div>
@@ -320,7 +361,7 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ ЖУРНАЛ ══════════════════════════════ -->
-<div id="tab-attendance" style="display:none">
+<div id="tab-attendance" role="tabpanel" aria-label="Журнал" style="display:none">
   <div class="card no-print">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
       <div class="date-filter">
@@ -329,7 +370,7 @@ tr:hover td{background:#fafbfd}
         <button class="btn btn-outline btn-sm" onclick="loadAttendance()">Применить</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-outline btn-sm" onclick="loadAttendance()">🔄</button>
+        <button class="btn btn-outline btn-sm" onclick="loadAttendance()" aria-label="Обновить">🔄</button>
         <button class="btn btn-success btn-sm" onclick="exportExcel()">📥 Excel</button>
       </div>
     </div>
@@ -352,7 +393,7 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ СТАТИСТИКА ══════════════════════════════ -->
-<div id="tab-stats" style="display:none">
+<div id="tab-stats" role="tabpanel" aria-label="Статистика" style="display:none">
   <div class="card">
     <div class="form-row">
       <div class="field" style="flex:2"><label>Ученик</label><select id="stats-student"></select></div>
@@ -363,7 +404,7 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ WHATSAPP ══════════════════════════════ -->
-<div id="tab-whatsapp" style="display:none">
+<div id="tab-whatsapp" role="tabpanel" aria-label="WhatsApp" style="display:none">
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
@@ -373,7 +414,7 @@ tr:hover td{background:#fafbfd}
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="wa-dot2"></div>
         <span id="wa-status-label" style="font-size:16px;font-weight:700"></span>
-        <button class="btn btn-outline btn-sm" onclick="loadWAStatus()">🔄</button>
+        <button class="btn btn-outline btn-sm" onclick="loadWAStatus()" aria-label="Обновить">🔄</button>
       </div>
     </div>
     <div id="wa-detail" style="font-size:13px;color:#888;margin-bottom:16px"></div>
@@ -410,7 +451,7 @@ tr:hover td{background:#fafbfd}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3>Лог сообщений</h3>
-      <button class="btn btn-outline btn-sm" onclick="loadWAStatus()">🔄</button>
+      <button class="btn btn-outline btn-sm" onclick="loadWAStatus()" aria-label="Обновить">🔄</button>
     </div>
     <div class="table-wrap">
       <table><thead><tr><th>Время</th><th>Статус</th><th>Ученик</th></tr></thead>
@@ -420,7 +461,7 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ TELEGRAM ══════════════════════════════ -->
-<div id="tab-telegram" style="display:none">
+<div id="tab-telegram" role="tabpanel" aria-label="Telegram" style="display:none">
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
@@ -430,7 +471,7 @@ tr:hover td{background:#fafbfd}
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="tg-dot"></div>
         <span id="tg-status-label" style="font-size:16px;font-weight:700">Проверка...</span>
-        <button class="btn btn-outline btn-sm" onclick="loadTGStatus()">🔄</button>
+        <button class="btn btn-outline btn-sm" onclick="loadTGStatus()" aria-label="Обновить">🔄</button>
       </div>
     </div>
     <div id="tg-mode" style="font-size:13px;color:#2E5FA3;font-weight:600;margin-bottom:16px"></div>
@@ -459,19 +500,19 @@ tr:hover td{background:#fafbfd}
     <ol style="padding-left:20px;line-height:2.1;font-size:14px;color:#555">
       <li>Родитель находит бота и пишет <code>/start</code></li>
       <li>Бот отвечает с chat_id</li>
-      <li>Учитель вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
+      <li>Педагог вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
     </ol>
   </div>
 </div>
 
 <!-- ══════════════════════════════ АУДИТ ══════════════════════════════ -->
-<div id="tab-audit" style="display:none">
+<div id="tab-audit" role="tabpanel" aria-label="Аудит" style="display:none">
   <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center">
     <div>
       <h2>🔍 Журнал действий</h2>
       <p style="font-size:13px;color:#aaa;margin-top:4px">Все изменения данных фиксируются автоматически</p>
     </div>
-    <button class="btn btn-outline btn-sm" onclick="loadAudit()">🔄</button>
+    <button class="btn btn-outline btn-sm" onclick="loadAudit()" aria-label="Обновить">🔄</button>
   </div>
   <div class="table-wrap">
     <table><thead><tr><th>Время</th><th>Действие</th><th>Объект</th><th>Детали</th><th>IP</th></tr></thead>
@@ -481,7 +522,7 @@ tr:hover td{background:#fafbfd}
 
 
 <!-- ══════════════════════════════ EMAIL ══════════════════════════════ -->
-<div id="tab-email" style="display:none">
+<div id="tab-email" role="tabpanel" aria-label="Email" style="display:none">
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
@@ -491,7 +532,7 @@ tr:hover td{background:#fafbfd}
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="em-dot"></div>
         <span id="em-status-label" style="font-size:16px;font-weight:700">Проверка...</span>
-        <button class="btn btn-outline btn-sm" onclick="loadEmailStatus()">🔄</button>
+        <button class="btn btn-outline btn-sm" onclick="loadEmailStatus()" aria-label="Обновить">🔄</button>
       </div>
     </div>
     <div id="em-detail" style="font-size:13px;color:#888;margin-bottom:16px"></div>
@@ -522,13 +563,13 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- ══════════════════════════════ ОШИБКИ ══════════════════════════════ -->
-<div id="tab-errors" style="display:none">
+<div id="tab-errors" role="tabpanel" aria-label="Ошибки" style="display:none">
   <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center">
     <div>
       <h2>⚠️ Журнал ошибок</h2>
       <p style="font-size:13px;color:#aaa;margin-top:4px">Последние 50 ошибок сервера</p>
     </div>
-    <button class="btn btn-outline btn-sm" onclick="loadErrors()">🔄</button>
+    <button class="btn btn-outline btn-sm" onclick="loadErrors()" aria-label="Обновить">🔄</button>
   </div>
   <div class="table-wrap">
     <table><thead><tr><th>Время</th><th>Сообщение</th><th>URL</th><th>IP</th></tr></thead>
@@ -538,11 +579,24 @@ tr:hover td{background:#fafbfd}
 
 </div><!-- /content -->
 
+<!-- Confirm-диалог (замена native confirm) -->
+<div class="modal" id="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal-box confirm-box">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-text" id="confirm-text"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirm-yes">Удалить</button>
+      <button class="btn btn-outline" id="confirm-no">Отмена</button>
+    </div>
+  </div>
+</div>
+
 <!-- Тост -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Модалка QR группы -->
-<div class="modal" id="qr-modal">
+<div class="modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-name">
   <div class="modal-box">
     <h2 id="qr-name"></h2>
     <p style="color:#aaa;font-size:13px">Распечатайте и повесьте у входа в кабинет</p>
@@ -555,7 +609,7 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- Модалка подробностей ученика -->
-<div class="modal" id="student-modal">
+<div class="modal" id="student-modal" role="dialog" aria-modal="true" aria-labelledby="sm-name">
   <div class="modal-box" style="text-align:left">
     <h2 id="sm-name" style="margin-bottom:16px;text-align:center"></h2>
     <div id="sm-content"></div>
@@ -568,7 +622,7 @@ tr:hover td{background:#fafbfd}
 </div>
 
 <!-- Модалка рассылки -->
-<div class="modal" id="broadcast-modal">
+<div class="modal" id="broadcast-modal" role="dialog" aria-modal="true" aria-label="Рассылка группе">
   <div class="modal-box" style="text-align:left">
     <h2 style="margin-bottom:12px">📢 Рассылка группе</h2>
     <p style="font-size:13px;color:#888;margin-bottom:14px">Сообщение придёт всем родителям группы <b id="bc-group-name"></b></p>
@@ -591,15 +645,21 @@ let _attGrp        = null;
 let _attSortCol    = -1;
 let _attSortAsc    = true;
 let _broadcastGrpId = null;
+let _searchTimer   = null;
 
 // ════════════════════════════════════════════════════════════════
-// ВКЛАДКИ
+// ВКЛАДКИ (a11y: keyboard nav)
 // ════════════════════════════════════════════════════════════════
 function showTab(name) {
   TABS.forEach(n => {
     document.getElementById('tab-'+n).style.display = n===name ? '' : 'none';
   });
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', TABS[i]===name));
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const active = TABS[i]===name;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active);
+    t.setAttribute('tabindex', active ? '0' : '-1');
+  });
   const loaders = {
     dashboard: loadDashboard,
     students:  loadStudents,
@@ -615,12 +675,59 @@ function showTab(name) {
   if (loaders[name]) loaders[name]();
 }
 
+// Keyboard navigation for tabs (Arrow Left/Right)
+document.addEventListener('keydown', e => {
+  if (!e.target.classList.contains('tab')) return;
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  const idx = tabs.indexOf(e.target);
+  let next = -1;
+  if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+  else if (e.key === 'ArrowLeft') next = (idx - 1 + tabs.length) % tabs.length;
+  if (next >= 0) { e.preventDefault(); tabs[next].focus(); tabs[next].click(); }
+});
+
 // ════════════════════════════════════════════════════════════════
-// ТОСТ
+// МОДАЛКИ (a11y: ESC close, backdrop click, focus trap)
 // ════════════════════════════════════════════════════════════════
-function toast(msg, type='ok', ms=3000) {
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const open = document.querySelector('.modal.show');
+    if (open) { open.classList.remove('show'); e.preventDefault(); }
+  }
+});
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal') && e.target.classList.contains('show')) {
+    e.target.classList.remove('show');
+  }
+});
+
+// ════════════════════════════════════════════════════════════════
+// CONFIRM DIALOG (замена native confirm)
+// ════════════════════════════════════════════════════════════════
+function confirmDialog({icon='⚠️', title='Подтвердите', text='', yesLabel='Подтвердить', yesClass='btn-danger', noLabel='Отмена'}={}) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-icon').textContent = icon;
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-text').innerHTML = text;
+    const yesBtn = document.getElementById('confirm-yes');
+    yesBtn.textContent = yesLabel;
+    yesBtn.className = 'btn ' + yesClass;
+    document.getElementById('confirm-no').textContent = noLabel;
+    const modal = document.getElementById('confirm-modal');
+    modal.classList.add('show');
+    const cleanup = (result) => { modal.classList.remove('show'); resolve(result); };
+    yesBtn.onclick = () => cleanup(true);
+    document.getElementById('confirm-no').onclick = () => cleanup(false);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// ТОСТ (улучшенный: авто-длительность, кнопка закрытия)
+// ════════════════════════════════════════════════════════════════
+function toast(msg, type='ok', ms) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  if (!ms) ms = Math.max(3000, Math.min(msg.length * 80, 8000));
+  t.innerHTML = esc(msg) + ' <button class="toast-close" onclick="this.parentElement.className=\'toast\'" aria-label="Закрыть">&times;</button>';
   t.className = 'toast show ' + type;
   clearTimeout(t._t);
   t._t = setTimeout(() => t.className='toast', ms);
@@ -632,11 +739,52 @@ function toast(msg, type='ok', ms=3000) {
 async function api(url, opts={}) {
   try {
     const r = await fetch(url, { headers:{'Content-Type':'application/json'}, ...opts });
+    if (r.status === 401) { toast('Сессия истекла — обновите страницу','err'); return { error:'Unauthorized' }; }
     const data = await r.json();
     if (!r.ok && !data.error) data.error = `Ошибка ${r.status}`;
     return data;
   } catch(e) { return { error: e.message }; }
 }
+
+// ════════════════════════════════════════════════════════════════
+// DEBOUNCE ПОИСКА
+// ════════════════════════════════════════════════════════════════
+function _debounceSearch() {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(loadStudents, 300);
+}
+
+// ════════════════════════════════════════════════════════════════
+// ВАЛИДАЦИЯ ФОРМ
+// ════════════════════════════════════════════════════════════════
+function _validateField(fieldId, inputId, check) {
+  const field = document.getElementById(fieldId);
+  const input = document.getElementById(inputId);
+  if (!field || !input) return true;
+  const val = input.value.trim();
+  const ok = check(val);
+  field.classList.toggle('field-error', !ok);
+  return ok;
+}
+function _validateStudentForm() {
+  let ok = true;
+  if (!_validateField('field-name','f-name', v => v.length > 0)) ok = false;
+  const phone = document.getElementById('f-phone').value.trim();
+  if (phone && !_validateField('field-phone','f-phone', v => /^[0-9]{10,15}$/.test(v))) ok = false;
+  const tg = document.getElementById('f-tg').value.trim();
+  if (tg && !_validateField('field-tg','f-tg', v => /^[0-9]+$/.test(v))) ok = false;
+  const email = document.getElementById('f-email').value.trim();
+  if (email && !_validateField('field-email','f-email', v => /^[^@]+@[^@]+\.[^@]+$/.test(v))) ok = false;
+  return ok;
+}
+// Clear errors on input + filter phone/tg to digits only
+document.addEventListener('input', e => {
+  const field = e.target.closest('.field');
+  if (field) field.classList.remove('field-error');
+  if (e.target.id === 'f-phone' || e.target.id === 'f-tg' || e.target.id === 'wa-test-phone' || e.target.id === 'tg-test-id') {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  }
+});
 
 // ════════════════════════════════════════════════════════════════
 // ДАШБОРД
@@ -649,7 +797,7 @@ async function loadDashboard() {
 
   // Онбординг
   const steps = [
-    { done: d.groups > 0,   icon:'🏫', text:'Создать группу (класс/секцию)' },
+    { done: d.groups > 0,   icon:'📚', text:'Создать группу (кружок/секцию)' },
     { done: d.students > 0, icon:'👥', text:'Добавить учеников' },
     { done: waOk,           icon:'📱', text:'Подключить WhatsApp' },
   ];
@@ -665,19 +813,23 @@ async function loadDashboard() {
     ).join('');
   }
 
-  // График 7 дней
+  // График 7 дней (a11y: aria-label, role=img)
   const chart = document.getElementById('dash-chart');
   if (chart && d.chart) {
     const maxVal = Math.max(...d.chart.map(c => c.present), 1);
+    const totalWeek = d.chart.reduce((a,c)=>a+c.present,0);
+    const totalLate = d.chart.reduce((a,c)=>a+(c.late||0),0);
+    chart.setAttribute('role','img');
+    chart.setAttribute('aria-label',`Посещаемость за 7 дней: ${totalWeek} визитов, ${totalLate} опозданий`);
     chart.innerHTML = d.chart.map(c => {
       const h = Math.max(4, Math.round((c.present / maxVal) * 70));
       const day = new Date(c.date).toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'numeric' });
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default" title="${c.date}: ${c.present} чел${c.late ? ', опоз: '+c.late : ''}">
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default" title="${c.date}: ${c.present} чел${c.late ? ', опоздания: '+c.late : ''}">
         <div style="font-size:11px;color:#2E5FA3;font-weight:700">${c.present||''}</div>
         <div style="width:100%;background:${c.late ? '#fff3e0' : '#d6eaf8'};border-radius:6px 6px 0 0;height:${h}px;position:relative">
-          ${c.late ? `<div style="position:absolute;bottom:0;width:100%;background:#f39c12;border-radius:6px 6px 0 0;height:${Math.round((c.late/c.present||0)*h)}px"></div>` : ''}
+          ${c.late ? `<div style="position:absolute;bottom:0;width:100%;background:#e65100;border-radius:6px 6px 0 0;height:${Math.round((c.late/c.present||0)*h)}px"></div>` : ''}
         </div>
-        <div style="font-size:9px;color:#aaa;white-space:nowrap">${day}</div>
+        <div style="font-size:10px;color:#666;white-space:nowrap">${day}</div>
       </div>`;
     }).join('');
   }
@@ -687,7 +839,7 @@ async function loadDashboard() {
     { icon:'👥', num: s.total||0,   lbl:'Учеников', cls:'' },
     { icon:'✅', num: s.present||0, lbl:'Пришли', cls:'dash-ok' },
     { icon:'⚠️', num: s.late||0,    lbl:'Опозданий', cls: s.late ? 'dash-warn' : '' },
-    { icon:'🏫', num: d.groups||0,  lbl:'Групп', cls:'' },
+    { icon:'📚', num: d.groups||0,  lbl:'Групп', cls:'' },
     { icon:'📧', num: d.email?.ready ? '✅' : '—', lbl:'Email', cls:'' },
   ].map(c => `<div class="dash-card ${c.cls}">
     <div class="dash-icon">${c.icon}</div>
@@ -735,7 +887,7 @@ async function loadGroups() {
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR класса</button>
+          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR группы</button>
           <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${esc(g.name)}')">📢 Рассылка</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
           <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${esc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
@@ -760,14 +912,15 @@ async function addGroup() {
 }
 async function editGroup(id,name,start,late) {
   const newName=prompt('Название:',name); if(!newName) return;
-  const newStart=prompt('Начало урока (09:00):',start);
+  const newStart=prompt('Начало занятия (15:00):',start);
   const newLate=prompt('Порог опоздания (мин):',late);
   await api(`/api/groups/${id}`,{method:'PUT',body:JSON.stringify({name:newName,lessonStartTime:newStart||'',lateMinutes:Number(newLate)||10})});
   toast('Группа обновлена ✅');
   loadGroups();
 }
 async function deleteGroup(id,name) {
-  if (!confirm(`Удалить группу «${name}»?\nУченики не удалятся.`)) return;
+  const ok = await confirmDialog({icon:'🗑', title:`Удалить группу «${name}»?`, text:'Ученики группы не будут удалены.', yesLabel:'Удалить', yesClass:'btn-danger'});
+  if (!ok) return;
   await api(`/api/groups/${id}`,{method:'DELETE'});
   toast('Группа удалена');
   loadGroups();
@@ -823,7 +976,7 @@ async function loadStudents(groupId) {
     const hasConsent = !!s.consentDate;
     return `<div class="student-card ${!hasConsent?'no-consent':''}" style="${!s.isActive?'opacity:.55':''}">
       <span class="consent-badge ${hasConsent?'consent-ok':'consent-no'}">${hasConsent?'✅ Согласие':'⚠️ Нет согласия'}</span>
-      <div class="avatar">${s.name[0].toUpperCase()}</div>
+      <div class="avatar">${(s.name||'?')[0].toUpperCase()}</div>
       <h3>${esc(s.name)}${!s.isActive?' <span style="font-size:11px;color:#aaa">(архив)</span>':''}</h3>
       <div class="meta">
         ${s.parentPhone ? '📱 '+s.parentPhone : '<span style="color:#ddd">WhatsApp не указан</span>'}<br>
@@ -851,8 +1004,8 @@ async function loadStudents(groupId) {
 }
 
 async function addStudent() {
+  if (!_validateStudentForm()) { toast('Проверьте правильность заполнения полей','err'); return; }
   const name = document.getElementById('f-name').value.trim();
-  if (!name) { toast('Введите имя ученика','err'); return; }
   const btn = document.getElementById('add-btn');
   btn.disabled = true; btn.textContent = 'Добавляю...';
   try {
@@ -884,7 +1037,8 @@ async function editTG(id, current) {
 }
 
 async function manualMark(id, name) {
-  const reason = confirm(`Отметить ${name} как «Болен»?\n\n[Отмена] = Уважительная причина`) ? 'sick' : 'valid';
+  const isSick = await confirmDialog({icon:'📝', title:`Отметить ${name}`, text:'Выберите причину отсутствия', yesLabel:'🤒 Болен', yesClass:'btn-warn', noLabel:'📝 Уваж. причина'});
+  const reason = isSick ? 'sick' : 'valid';
   await api(`/api/students/${id}/manual`,{method:'POST',body:JSON.stringify({reason})});
   toast(`${name} отмечен(а): ${reason==='sick'?'🤒 Болен':'📝 Уваж. причина'}`);
   loadAttendance();
@@ -915,15 +1069,18 @@ async function openStudentModal(id) {
     </div>`;
 
   document.getElementById('sm-gdpr-btn').onclick = async () => {
-    if (!confirm(`ПОЛНОЕ удаление данных ${st.name}?\n\nЭто действие необратимо. Вся история посещаемости, телефон и Telegram будут удалены.`)) return;
-    await api(`/api/students/${id}/gdpr`,{method:'DELETE'});
     closeModal('student-modal');
-    toast(`Данные ${st.name} полностью удалены (GDPR) ✅`);
+    const ok = await confirmDialog({icon:'⚠️', title:'ПОЛНОЕ удаление данных', text:`Вы удаляете все данные <b>${esc(st.name)}</b>.<br>Это действие <b>необратимо</b>. Вся история посещаемости, телефон и Telegram будут удалены.`, yesLabel:'Удалить навсегда', yesClass:'btn-danger'});
+    if (!ok) return;
+    await api(`/api/students/${id}/gdpr`,{method:'DELETE'});
+    toast(`Данные ${st.name} полностью удалены (GDPR)`);
     loadStudents();
   };
   document.getElementById('sm-archive-btn').onclick = async () => {
-    await api(`/api/students/${id}/archive`,{method:'POST',body:'{}'});
     closeModal('student-modal');
+    const ok = await confirmDialog({icon:'📦', title:'Архивировать ученика?', text:`<b>${esc(st.name)}</b> будет перемещён в архив. Данные сохранятся.`, yesLabel:'Архивировать', yesClass:'btn-warn'});
+    if (!ok) return;
+    await api(`/api/students/${id}/archive`,{method:'POST',body:'{}'});
     toast(`${st.name} архивирован`);
     loadStudents();
   };
@@ -965,10 +1122,11 @@ async function loadAttendance(groupId) {
   if (to)   params.push('to='+to);
   if (params.length) url += '?'+params.join('&');
 
+  _showSkeleton('att-body', 5);
   const rows = await api(url);
   const body = document.getElementById('att-body');
   if (!Array.isArray(rows)||!rows.length) {
-    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:32px">Записей нет</td></tr>'; return;
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#666;padding:32px">Записей нет</td></tr>'; return;
   }
   body.innerHTML = rows.map(r => {
     const d   = new Date(r.time);
@@ -1061,7 +1219,7 @@ async function showGroupQR(groupId) {
   const d = await api(`/api/groups/${groupId}/qr`);
   if (d.error) { toast(d.error,'err'); return; }
   const pins = d.students.map(s => `<tr><td style="padding:4px 12px">${esc(s.name)}</td><td style="padding:4px 12px;font-weight:700;letter-spacing:2px;font-size:16px">${s.pin}</td></tr>`).join('');
-  document.getElementById('qr-name').textContent = d.group.name + ' — QR класса';
+  document.getElementById('qr-name').textContent = d.group.name + ' — QR группы';
   document.getElementById('qr-img').src = d.qrImage;
   document.getElementById('qr-url').textContent = d.url;
   document.getElementById('qr-modal').classList.add('show');
@@ -1107,7 +1265,7 @@ function printGroupQR() {
 
 function printConsentForm() {
   const w = window.open('','_blank');
-  const schoolName = document.querySelector('header .logo')?.textContent?.trim() || 'Учебный центр';
+  const schoolName = document.querySelector('header h1')?.textContent?.replace(/^🎓\s*/, '').replace(/QR Посещаемость/,'').trim() || 'Учебный центр';
   w.document.write(`<html><head><meta charset="UTF-8"><title>Согласие на обработку ПД</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -1144,7 +1302,7 @@ td{padding:4px 8px;vertical-align:top}
 
 <p><b>Цели обработки:</b> автоматическое уведомление родителей о приходе ребёнка на занятие, учёт посещаемости, информирование об опозданиях.</p>
 
-<p><b>Срок действия согласия:</b> на период обучения ребёнка, но не более 2 лет с даты подписания. Согласие может быть отозвано в любой момент путём письменного обращения к администрации.</p>
+<p><b>Срок действия согласия:</b> на период посещения занятий ребёнком, но не более 2 лет с даты подписания. Согласие может быть отозвано в любой момент путём письменного обращения к администрации.</p>
 
 <p><b>Передача данных:</b> для отправки уведомлений используются сервисы Green API (WhatsApp) и Telegram Bot API. Передаётся только номер телефона и текст уведомления.</p>
 
@@ -1278,7 +1436,8 @@ async function _loadQr() {
 }
 
 async function waLogout() {
-  if (!confirm('Выйти из WhatsApp? Потребуется повторная авторизация через QR.')) return;
+  const ok = await confirmDialog({icon:'🚪', title:'Выйти из WhatsApp?', text:'Потребуется повторная авторизация через QR-код.', yesLabel:'Выйти', yesClass:'btn-danger'});
+  if (!ok) return;
   const r = await api('/api/whatsapp/logout', {method:'POST'});
   r.error ? toast('Ошибка: '+r.error,'err') : toast('Вышли из WhatsApp');
   loadWAStatus();
@@ -1325,6 +1484,7 @@ async function sendTestTG() {
 // АУДИТ
 // ════════════════════════════════════════════════════════════════
 async function loadAudit() {
+  _showSkeleton('audit-body', 5);
   const rows = await api('/api/audit');
   const body = document.getElementById('audit-body');
   if (!Array.isArray(rows)||!rows.length) {
@@ -1333,7 +1493,8 @@ async function loadAudit() {
   const actionLabels = {
     create:'➕ Создание', update:'✏️ Изменение', delete:'🗑 Удаление',
     archive:'📦 Архив', gdpr_delete:'⚠️ GDPR удаление',
-    scan:'📱 Скан', manual:'✏️ Ручная отметка',
+    scan:'📱 Скан', scan_pin:'📱 Скан (PIN)', manual:'✏️ Ручная отметка',
+    reminder:'⏰ Напоминание',
     test_wa:'🧪 Тест WA', test_tg:'🧪 Тест TG',
     broadcast:'📢 Рассылка', import:'📥 Импорт',
     cleanup:'🧹 Очистка', duplicate:'📋 Копия',
@@ -1345,7 +1506,7 @@ async function loadAudit() {
       <td style="color:#888;font-size:12px;white-space:nowrap">${t}</td>
       <td><span class="audit-action">${lbl}</span></td>
       <td style="font-size:12px">${esc(r.entity)}</td>
-      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(r.details||'')}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.details||'')}">${esc(r.details||'')}</td>
       <td style="font-size:12px;color:#aaa">${r.ip||'—'}</td>
     </tr>`;
   }).join('');
@@ -1411,7 +1572,7 @@ async function loadErrors() {
     const t = r.time ? new Date(r.time).toLocaleString('ru-RU', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
     return `<tr>
       <td style="color:#888;font-size:12px;white-space:nowrap">${t}</td>
-      <td style="font-size:12px;color:#c62828;max-width:300px;overflow:hidden;text-overflow:ellipsis">${esc(r.msg || '')}</td>
+      <td style="font-size:12px;color:#b71c1c;max-width:300px;overflow:hidden;text-overflow:ellipsis" title="${esc(r.msg || '')}">${esc(r.msg || '')}</td>
       <td style="font-size:12px;color:#888">${esc(r.url || '—')}</td>
       <td style="font-size:12px;color:#aaa">${esc(r.ip || '—')}</td>
     </tr>`;
@@ -1419,14 +1580,38 @@ async function loadErrors() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// АВТООБНОВЛЕНИЕ + ИНИЦИАЛИЗАЦИЯ
+// СКЕЛЕТОНЫ ЗАГРУЗКИ
 // ════════════════════════════════════════════════════════════════
-setInterval(() => api('/api/whatsapp/status').then(r => {
-  if (r.error) return;
-  const c=r.state==='authorized'?'ready':r.state==='error'?'err':'warn';
-  const d=document.getElementById('wa-dot'); if(d) d.className='dot '+c;
-  document.getElementById('wa-text').textContent='WA: '+(r.state==='authorized'?'Подключён ✅':r.state==='notAuthorized'?'⚠️ Авториз.':'⚠️');
-}), 30000);
+function _showSkeleton(tbodyId, cols=4, rows=5) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  tbody.innerHTML = Array(rows).fill(0).map(() =>
+    `<tr class="skeleton-row">${Array(cols).fill(0).map(()=>'<td><div class="skeleton" style="width:'+Math.round(50+Math.random()*40)+'%"></div></td>').join('')}</tr>`
+  ).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+// АВТООБНОВЛЕНИЕ + VISIBILITY API
+// ════════════════════════════════════════════════════════════════
+let _waStatusTimer = null;
+function _startWaPolling() {
+  if (_waStatusTimer) return;
+  _waStatusTimer = setInterval(() => {
+    if (document.hidden) return; // пропускаем неактивную вкладку
+    api('/api/whatsapp/status').then(r => {
+      if (r.error) return;
+      const c=r.state==='authorized'?'ready':r.state==='error'?'err':'warn';
+      const d=document.getElementById('wa-dot'); if(d) d.className='dot '+c;
+      document.getElementById('wa-text').textContent='WA: '+(r.state==='authorized'?'Подключён ✅':r.state==='notAuthorized'?'⚠️ Авториз.':'⚠️');
+    });
+  }, 30000);
+}
+_startWaPolling();
+
+// Pause QR polling when tab hidden
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { _stopQrPolling(); }
+});
 
 // Старт
 (async () => {

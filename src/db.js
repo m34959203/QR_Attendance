@@ -376,7 +376,7 @@ function autoCleanup(retentionYears) {
 function _calcLate(lessonTime) {
   const [hh, mm] = lessonTime.split(':').map(Number);
   if (isNaN(hh)) return 0;
-  // Получаем текущие часы и минуты в часовом поясе школы
+  // Получаем текущие часы и минуты в часовом поясе учебного центра
   const config = require('./config');
   const now = new Date();
   let nowH, nowM;
