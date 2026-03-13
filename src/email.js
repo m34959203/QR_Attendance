@@ -8,6 +8,10 @@ const config = require('./config');
 let transporter = null;
 let _ready = false;
 
+function _esc(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function init() {
   if (!config.SMTP_HOST || !config.SMTP_USER || !config.SMTP_PASS) {
     console.log('ℹ️  Email: SMTP не настроен — уведомления по email отключены');
@@ -53,14 +57,14 @@ async function sendArrival({ to, parentName, studentName, time, date, isLate, mi
 <body style="font-family:Arial,sans-serif;background:#f5f7fa;padding:20px">
 <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
   <div style="background:linear-gradient(135deg,#2E5FA3,#4472C4);padding:24px;text-align:center">
-    <h2 style="color:#fff;margin:0;font-size:22px">🎓 ${school}</h2>
+    <h2 style="color:#fff;margin:0;font-size:22px">🎓 ${_esc(school)}</h2>
     <p style="color:rgba(255,255,255,.8);margin:6px 0 0;font-size:13px">Система посещаемости</p>
   </div>
   <div style="padding:24px">
-    <p style="font-size:16px;color:#333;margin-bottom:16px">Здравствуйте, <b>${parentName}</b>!</p>
+    <p style="font-size:16px;color:#333;margin-bottom:16px">Здравствуйте, <b>${_esc(parentName)}</b>!</p>
     <table style="width:100%;border-collapse:collapse">
       <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:13px">Ученик</td>
-          <td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:700;text-align:right">${studentName}</td></tr>
+          <td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:700;text-align:right">${_esc(studentName)}</td></tr>
       <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:13px">Время прихода</td>
           <td style="padding:8px 0;border-bottom:1px solid #eee;font-weight:700;text-align:right;color:#2E5FA3">${time}</td></tr>
       <tr><td style="padding:8px 0;border-bottom:1px solid #eee;color:#888;font-size:13px">Дата</td>
@@ -72,7 +76,7 @@ async function sendArrival({ to, parentName, studentName, time, date, isLate, mi
     </div>
   </div>
   <div style="padding:14px 24px;background:#f7f9fc;text-align:center;font-size:11px;color:#aaa">
-    Вы получаете это письмо т.к. ваш ребёнок посещает занятия ${school}.
+    Вы получаете это письмо т.к. ваш ребёнок посещает занятия ${_esc(school)}.
     Для отписки обратитесь к педагогу.
   </div>
 </div>

@@ -34,6 +34,9 @@ module.exports = {
   SMTP_USER:          clean(env.SMTP_USER),
   SMTP_PASS:          clean(env.SMTP_PASS),
 
+  // Сеть
+  TRUST_PROXY:          clean(env.TRUST_PROXY, '1'),
+
   // Хранение данных
   DATA_RETENTION_YEARS: Number(env.DATA_RETENTION_YEARS) || 0,
 };

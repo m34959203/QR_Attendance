@@ -11,12 +11,14 @@
  */
 
 const https  = require('https');
+const crypto = require('crypto');
 const config = require('./config');
 
-let _polling = false;
-let _lastId  = 0;
-let _ready   = false;
-let _botName = '';
+let _polling     = false;
+let _lastId      = 0;
+let _ready       = false;
+let _botName     = '';
+let _secretToken = '';
 
 // ── Инициализация ─────────────────────────────────────────────────────────────
 async function init() {
@@ -38,10 +40,11 @@ async function init() {
   const isLocalhost = config.BASE_URL.includes('localhost') || config.BASE_URL.includes('127.0.0.1');
 
   if (!isLocalhost) {
-    // WEBHOOK режим
+    // WEBHOOK режим с secret_token для верификации
     const hookUrl = `${config.BASE_URL}/telegram-webhook`;
+    _secretToken = crypto.randomBytes(32).toString('hex');
     try {
-      await _post('setWebhook', { url: hookUrl });
+      await _post('setWebhook', { url: hookUrl, secret_token: _secretToken });
       _ready = true;
       console.log(`✅ Telegram Webhook установлен: ${hookUrl}`);
     } catch (e) {
@@ -56,6 +59,12 @@ async function init() {
   }
 
   return _botName;
+}
+
+// Проверка secret_token из заголовка
+function verifyWebhookSecret(headerValue) {
+  if (!_secretToken) return true; // polling режим, нет secret
+  return headerValue === _secretToken;
 }
 
 // Обработчик входящего update от Webhook (вызывается из server.js)
@@ -207,4 +216,4 @@ function _read(res, resolve, reject) {
 
 function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-module.exports = { init, sendMessage, getStatus, handleWebhookUpdate };
+module.exports = { init, sendMessage, getStatus, handleWebhookUpdate, verifyWebhookSecret };

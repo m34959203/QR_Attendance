@@ -7,8 +7,9 @@
  *  - getTodaySummary использует Intl.DateTimeFormat (правильный TZ)
  */
 'use strict';
-const fs   = require('fs');
-const path = require('path');
+const fs     = require('fs');
+const path   = require('path');
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
 const DB_FILE    = path.join(__dirname, '../data/db.sqlite');
@@ -93,6 +94,7 @@ function _migrate() {
   _col('students',   'parentEmail',    'TEXT DEFAULT ""');
   _col('students',   'telegramStopAt', 'TEXT DEFAULT ""');
   _col('students',   'pin',            'TEXT DEFAULT ""');
+  _col('students',   'parentToken',    'TEXT DEFAULT ""');
   _col('attendance', 'reason',         'TEXT DEFAULT ""');
 
   // Генерируем PIN для учеников без него
@@ -102,15 +104,24 @@ function _migrate() {
     db.run('UPDATE students SET pin=? WHERE id=?', [pin, s.id]);
   }
 
+  // Генерируем parentToken для учеников без него
+  const noTokenStudents = _all('SELECT id FROM students WHERE parentToken IS NULL OR parentToken = ""');
+  for (const s of noTokenStudents) {
+    const token = crypto.randomBytes(16).toString('hex');
+    db.run('UPDATE students SET parentToken=? WHERE id=?', [token, s.id]);
+  }
+
   // Индексы для производительности
   try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_studentId ON attendance(studentId)'); } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_time ON attendance(time)'); } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_attendance_groupId ON attendance(groupId)'); } catch {}
   try { db.run('CREATE INDEX IF NOT EXISTS idx_students_groupId ON students(groupId)'); } catch {}
+  try { db.run('CREATE INDEX IF NOT EXISTS idx_students_parentToken ON students(parentToken)'); } catch {}
 }
 
 function _col(tbl, col, def) {
-  try { db.run(`ALTER TABLE ${tbl} ADD COLUMN ${col} ${def}`); } catch {}
+  try { db.run(`ALTER TABLE ${tbl} ADD COLUMN ${col} ${def}`); }
+  catch (e) { if (!String(e).includes('duplicate column')) throw e; }
 }
 
 // ── PIN генерация ────────────────────────────────────────────────────────────
@@ -121,7 +132,7 @@ function _generatePin(groupId) {
   let pin;
   let attempts = 0;
   do {
-    pin = String(Math.floor(1000 + Math.random() * 9000)); // 1000–9999
+    pin = String(Math.floor(100000 + Math.random() * 900000)); // 100000–999999
     attempts++;
   } while (existing.has(pin) && attempts < 100);
   return pin;
@@ -166,7 +177,8 @@ function getAuditLog(limit = 100) {
 // ═══════════════════════════════════════════════════
 // ГРУППЫ
 // ═══════════════════════════════════════════════════
-function getGroups() { return _all('SELECT * FROM groups ORDER BY name'); }
+function getGroups()   { return _all('SELECT * FROM groups ORDER BY name'); }
+function countGroups() { return (_all('SELECT COUNT(*) as n FROM groups')[0]?.n) || 0; }
 
 function addGroup({ name, lessonStartTime = '', lateMinutes = 10 }) {
   const g = { id: _id(), name, lessonStartTime, lateMinutes: Number(lateMinutes), createdAt: new Date().toISOString() };
@@ -188,6 +200,8 @@ function findGroup(id)   { return _get('SELECT * FROM groups WHERE id=?', [id]);
 // ═══════════════════════════════════════════════════
 // УЧЕНИКИ
 // ═══════════════════════════════════════════════════
+function countStudents() { return (_all('SELECT COUNT(*) as n FROM students WHERE isActive=1')[0]?.n) || 0; }
+
 function getStudents(groupId = null, includeArchived = false) {
   let q = 'SELECT * FROM students WHERE 1=1';
   const p = [];
@@ -200,17 +214,18 @@ function getStudents(groupId = null, includeArchived = false) {
 function addStudent({ name, parentPhone = '', parentName = 'Родитель', parentEmail = '',
                       telegramChatId = '', groupId = '', consentDate = '' }) {
   const pin = _generatePin(groupId);
+  const parentToken = crypto.randomBytes(16).toString('hex');
   const s = {
     id: _id(), name,
     parentPhone:    parentPhone.replace(/\D/g, ''),
     parentName,
     parentEmail:    (parentEmail || '').trim().toLowerCase(),
     telegramChatId: telegramChatId.trim(),
-    groupId, consentDate, isActive: 1, pin,
+    groupId, consentDate, isActive: 1, pin, parentToken,
     createdAt: new Date().toISOString(),
   };
-  _run('INSERT INTO students (id,name,parentPhone,parentName,parentEmail,telegramChatId,groupId,consentDate,isActive,pin,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-    [s.id, s.name, s.parentPhone, s.parentName, s.parentEmail, s.telegramChatId, s.groupId, s.consentDate, s.isActive, s.pin, s.createdAt]);
+  _run('INSERT INTO students (id,name,parentPhone,parentName,parentEmail,telegramChatId,groupId,consentDate,isActive,pin,parentToken,createdAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+    [s.id, s.name, s.parentPhone, s.parentName, s.parentEmail, s.telegramChatId, s.groupId, s.consentDate, s.isActive, s.pin, s.parentToken, s.createdAt]);
   return s;
 }
 
@@ -231,7 +246,10 @@ function updateStudent(id, fields) {
   return findStudent(id);
 }
 
-function deleteStudent(id)  { _run('DELETE FROM students WHERE id=?', [id]); }
+function deleteStudent(id) {
+  _run('DELETE FROM attendance WHERE studentId=?', [id]);
+  _run('DELETE FROM students WHERE id=?', [id]);
+}
 function archiveStudent(id) { _run('UPDATE students SET isActive=0 WHERE id=?', [id]); return findStudent(id); }
 function findStudent(id)    { return _get('SELECT * FROM students WHERE id=?', [id]); }
 
@@ -239,20 +257,21 @@ function findStudentByPin(groupId, pin) {
   return _get('SELECT * FROM students WHERE groupId=? AND pin=? AND isActive=1', [groupId, pin]);
 }
 
-// Токен для личного кабинета — первые 12 hex-символов ID
+// Токен для личного кабинета — криптографически случайный
 function getOrCreateParentToken(studentId) {
   const s = findStudent(studentId);
-  return s ? s.id.replace(/-/g, '').slice(0, 12) : null;
+  if (!s) return null;
+  if (s.parentToken) return s.parentToken;
+  // Генерируем токен для старых записей
+  const token = crypto.randomBytes(16).toString('hex');
+  _run('UPDATE students SET parentToken=? WHERE id=?', [token, studentId]);
+  return token;
 }
 
-// Найти ученика по токену (первые 12 hex ID без дефисов)
+// Найти ученика по parentToken
 function findStudentByToken(token) {
-  if (!token || token.length !== 12) return null;
-  // UUID без дефисов: первые 12 символов = первые 8 + 4 из второго блока
-  // Восстанавливаем паттерн: xxxxxxxx-xxxx (token = 8+4 hex)
-  const prefix = token.slice(0, 8) + '-' + token.slice(8, 12);
-  const students = _all('SELECT * FROM students WHERE id LIKE ?', [prefix + '%']);
-  return students.find(s => s.id.replace(/-/g, '').slice(0, 12) === token) || null;
+  if (!token || token.length < 16) return null;
+  return _get('SELECT * FROM students WHERE parentToken=?', [token]);
 }
 
 // GDPR — полное удаление
@@ -299,25 +318,25 @@ function getLastAttendance(studentId) {
   return _get('SELECT * FROM attendance WHERE studentId=? ORDER BY time DESC LIMIT 1', [studentId]);
 }
 
-function getAttendance(limit = 200, groupId = null) {
-  if (groupId) return _all(
-    'SELECT a.*, g.name AS groupName FROM attendance a LEFT JOIN groups g ON a.groupId=g.id WHERE a.groupId=? ORDER BY a.time DESC LIMIT ?',
-    [groupId, limit]);
-  return _all(
-    'SELECT a.*, g.name AS groupName FROM attendance a LEFT JOIN groups g ON a.groupId=g.id ORDER BY a.time DESC LIMIT ?',
-    [limit]);
+function getAttendance(limit = 200, groupId = null, from = null, to = null) {
+  let q = 'SELECT a.*, g.name AS groupName FROM attendance a LEFT JOIN groups g ON a.groupId=g.id WHERE 1=1';
+  const p = [];
+  if (groupId) { q += ' AND a.groupId=?'; p.push(groupId); }
+  if (from) { q += ' AND a.time >= ?'; p.push(from); }
+  if (to)   { q += ' AND a.time <= ?'; p.push(to + 'T23:59:59Z'); }
+  q += ' ORDER BY a.time DESC LIMIT ?';
+  p.push(limit);
+  return _all(q, p);
 }
 
 function getStudentStats(studentId, months = 6) {
-  const rows = _all('SELECT * FROM attendance WHERE studentId=? ORDER BY time DESC', [studentId]);
-  const map = {};
-  for (const r of rows) {
-    const month = r.time.slice(0, 7);
-    if (!map[month]) map[month] = { month, total: 0, late: 0, onTime: 0 };
-    map[month].total++;
-    r.isLate ? map[month].late++ : map[month].onTime++;
-  }
-  return Object.values(map).sort((a, b) => b.month.localeCompare(a.month)).slice(0, months);
+  return _all(
+    `SELECT substr(time,1,7) AS month, COUNT(*) AS total,
+            SUM(CASE WHEN isLate=1 THEN 1 ELSE 0 END) AS late,
+            SUM(CASE WHEN isLate=0 THEN 1 ELSE 0 END) AS onTime
+     FROM attendance WHERE studentId=?
+     GROUP BY substr(time,1,7) ORDER BY month DESC LIMIT ?`,
+    [studentId, months]);
 }
 
 function getAllAttendance(groupId = null) {
@@ -345,7 +364,8 @@ function getTodaySummary(tz) {
   const recs     = _all('SELECT * FROM attendance WHERE time >= ?', [cutoff]);
   const todayRecs = recs.filter(r => _sameDay(r.time, today, timezone));
   const unique    = new Set(todayRecs.map(r => r.studentId));
-  return { total: getStudents().length, present: unique.size, late: todayRecs.filter(r => r.isLate).length, today };
+  const total = (_all('SELECT COUNT(*) as n FROM students WHERE isActive=1')[0]?.n) || 0;
+  return { total, present: unique.size, late: todayRecs.filter(r => r.isLate).length, today };
 }
 
 function getAttendanceByDays(tz, days = 7) {
@@ -390,14 +410,16 @@ function _calcLate(lessonTime) {
     nowH = now.getHours();
     nowM = now.getMinutes();
   }
-  const diff = (nowH * 60 + nowM) - (hh * 60 + mm);
+  let diff = (nowH * 60 + nowM) - (hh * 60 + (mm || 0));
+  // Обработка перехода через полночь (занятие в 23:30, сейчас 00:15 → diff = -1395)
+  if (diff < -720) diff += 1440;
   return Math.max(0, diff);
 }
 
 module.exports = {
   init, isReady, backup,
-  getGroups, addGroup, updateGroup, deleteGroup, findGroup,
-  getStudents, addStudent, updateStudent, deleteStudent, archiveStudent,
+  getGroups, countGroups, addGroup, updateGroup, deleteGroup, findGroup,
+  getStudents, countStudents, addStudent, updateStudent, deleteStudent, archiveStudent,
   findStudent, findStudentByPin, gdprDeleteStudent, getOrCreateParentToken, findStudentByToken,
   addAttendance, addManualAttendance, getLastAttendance,
   getAttendance, getStudentStats, getAllAttendance, getStudentAttendance,
