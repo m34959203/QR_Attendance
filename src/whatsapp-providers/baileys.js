@@ -60,7 +60,16 @@ class BaileysProvider {
       }
 
       const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
-      const { version } = await fetchLatestBaileysVersion();
+
+      // Пытаемся получить последнюю версию WA, при ошибке используем fallback
+      let version;
+      try {
+        const res = await fetchLatestBaileysVersion();
+        version = res.version;
+      } catch (e) {
+        console.warn('⚠️  Baileys: не удалось получить версию с GitHub, используем встроенную');
+        version = [2, 3000, 1015901307];
+      }
 
       const sock = makeWASocket({
         version,
@@ -129,6 +138,7 @@ class BaileysProvider {
     } catch (err) {
       this._state = 'error';
       console.error('❌ Baileys ошибка подключения:', err.message);
+      console.error(err.stack);
     } finally {
       this._connecting = false;
     }
