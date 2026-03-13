@@ -3,7 +3,7 @@ const db     = require('./db');
 const config = require('./config');
 
 function autoClean() {
-  // В 03:00 по часовому поясу — очистка старых данных + бэкап
+  // В 03:00 по часовому поясу учебного центра — очистка старых данных + бэкап
   _scheduleAt(3, 0, () => {
     // Бэкап
     try {
@@ -29,11 +29,25 @@ function autoClean() {
 
 function _scheduleAt(hour, minute, fn) {
   function next() {
-    const now    = new Date();
-    const target = new Date(now);
-    target.setHours(hour, minute, 0, 0);
-    if (target <= now) target.setDate(target.getDate() + 1);
-    setTimeout(() => { try { fn(); } catch {} next(); }, target - now);
+    // Вычисляем целевое время в часовом поясе config.TIMEZONE
+    const tz = config.TIMEZONE || 'UTC';
+    const now = new Date();
+    let nowH, nowM;
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hour: 'numeric', minute: 'numeric', hour12: false,
+      }).formatToParts(now);
+      nowH = Number(parts.find(p => p.type === 'hour').value);
+      nowM = Number(parts.find(p => p.type === 'minute').value);
+    } catch {
+      nowH = now.getHours();
+      nowM = now.getMinutes();
+    }
+    const nowMin = nowH * 60 + nowM;
+    const targetMin = hour * 60 + minute;
+    let delayMin = targetMin - nowMin;
+    if (delayMin <= 0) delayMin += 1440; // завтра
+    setTimeout(() => { try { fn(); } catch {} next(); }, delayMin * 60 * 1000);
   }
   next();
 }

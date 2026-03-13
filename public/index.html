@@ -888,10 +888,10 @@ async function loadGroups() {
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR группы</button>
-          <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${esc(g.name)}')">📢 Рассылка</button>
+          <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${jesc(g.name)}')">📢 Рассылка</button>
           <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
-          <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${esc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}','${esc(g.name)}')">Удалить</button>
+          <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${jesc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}','${jesc(g.name)}')">Удалить</button>
         </div>
       </div>
     </div>`).join('');
@@ -1530,6 +1530,8 @@ async function _refreshSelects() {
 }
 
 function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Escape для вставки в JS-строки внутри onclick атрибутов
+function jesc(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
 
 
 // ════════════════════════════════════════════════════════════════

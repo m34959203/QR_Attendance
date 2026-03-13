@@ -102,7 +102,7 @@ function _sendReminders(group) {
 }
 
 /**
- * Сколько минут осталось до lessonStartTime (в часовом поясе школы)
+ * Сколько минут осталось до lessonStartTime (в часовом поясе учебного центра)
  */
 function _minutesUntilLesson(lessonTime) {
   const [hh, mm] = lessonTime.split(':').map(Number);
@@ -123,9 +123,11 @@ function _minutesUntilLesson(lessonTime) {
 
   const lessonMin = hh * 60 + mm;
   const nowMin    = nowH * 60 + nowM;
-  const diff      = lessonMin - nowMin;
+  let diff        = lessonMin - nowMin;
 
-  // Если разница отрицательная, занятие уже прошло сегодня
+  // Обработка перехода через полночь (занятие в 00:30, сейчас 23:30 → diff=60)
+  if (diff < -720) diff += 1440;
+
   return diff >= 0 ? diff : -1;
 }
 

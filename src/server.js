@@ -16,7 +16,7 @@ const reminders = require('./reminders');
 const { validateStudent, validateGroup, validatePhone, validateMessage } = require('./validate');
 
 const app = express();
-app.set('trust proxy', 1);   // Railway / Docker — за reverse-proxy
+if (config.TRUST_PROXY) app.set('trust proxy', Number(config.TRUST_PROXY) || 1);
 
 // ── Безопасность ──────────────────────────────────────────────────────────────
 app.use(helmet({
@@ -88,6 +88,9 @@ const apiWriteLimiter = rateLimit({
 
 // ── Telegram Webhook (публичный — до Basic Auth) ──────────────────────────────
 app.post('/telegram-webhook', async (req, res) => {
+  if (!tg.verifyWebhookSecret(req.headers['x-telegram-bot-api-secret-token'])) {
+    return res.sendStatus(403);
+  }
   res.sendStatus(200);
   if (req.body) await tg.handleWebhookUpdate(req.body).catch(e => logError(e.message));
 });
@@ -112,10 +115,10 @@ const authGuard = [authFailLimiter, (req, res, next) => {
   if (auth) {
     const [, enc] = auth.split(' ');
     const [, pwd] = Buffer.from(enc || '', 'base64').toString().split(':');
-    // Timing-safe сравнение пароля
-    const a = Buffer.from(pwd || '');
-    const b = Buffer.from(config.ADMIN_PASSWORD);
-    if (a.length === b.length && crypto.timingSafeEqual(a, b)) {
+    // Timing-safe сравнение: SHA-256 гарантирует одинаковую длину буферов
+    const a = crypto.createHash('sha256').update(pwd || '').digest();
+    const b = crypto.createHash('sha256').update(config.ADMIN_PASSWORD).digest();
+    if (crypto.timingSafeEqual(a, b)) {
       req.adminIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
       return next();
     }
@@ -127,12 +130,15 @@ const authGuard = [authFailLimiter, (req, res, next) => {
 app.use('/admin', ...authGuard);
 app.use('/api',   ...authGuard);
 
-// CSRF защита: проверка Origin для мутирующих запросов
+// CSRF защита: Origin обязателен для мутирующих запросов
 app.use('/api', (req, res, next) => {
   if (['POST', 'PUT', 'DELETE'].includes(req.method)) {
     const origin = req.headers.origin || req.headers.referer || '';
+    if (!origin) {
+      return res.status(403).json({ error: 'Запрос отклонён (CSRF: отсутствует Origin)' });
+    }
     const allowed = config.BASE_URL;
-    if (origin && !origin.startsWith(allowed) && !origin.startsWith('http://localhost') && !origin.startsWith('http://127.0.0.1')) {
+    if (!origin.startsWith(allowed) && !origin.startsWith('http://localhost') && !origin.startsWith('http://127.0.0.1')) {
       return res.status(403).json({ error: 'Запрос отклонён (CSRF)' });
     }
   }
@@ -153,6 +159,12 @@ app.use(express.static('public'));
   } catch (e) {
     console.error('💀 Не удалось инициализировать БД:', e.message);
     process.exit(1);
+  }
+
+  // Предупреждение при слабом пароле
+  if (config.ADMIN_PASSWORD === 'admin123') {
+    console.warn('⚠️  ВНИМАНИЕ: Используется пароль по умолчанию (admin123)!');
+    console.warn('   Установите ADMIN_PASSWORD в .env для безопасности.');
   }
 
   em.init();
@@ -329,8 +341,8 @@ app.get('/api/dashboard', (req, res) => {
       chart:    db.getAttendanceByDays(config.TIMEZONE, 7),
       wa:       wa.getStatus(),
       email:    em.getStatus(),
-      students: db.getStudents().length,
-      groups:   db.getGroups().length,
+      students: db.countStudents(),
+      groups:   db.countGroups(),
     });
   } catch (e) { logError('dashboard: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
@@ -491,7 +503,7 @@ app.post('/api/students/import', (req, res) => {
 // API: ПОСЕЩАЕМОСТЬ
 // ═══════════════════════════════════════════════════
 app.get('/api/attendance', (req, res) => {
-  try { res.json(db.getAttendance(200, req.query.groupId || null)); }
+  try { res.json(db.getAttendance(200, req.query.groupId || null, req.query.from || null, req.query.to || null)); }
   catch (e) { logError('attendance: ' + e.message, req); res.status(500).json({ error: e.message }); }
 });
 
@@ -730,7 +742,7 @@ footer a{color:rgba(255,255,255,.7);text-decoration:none}
   <h2>${groupName}</h2>
   <p class="school">${school}</p>
   <form id="f" autocomplete="off">
-    <input class="pin-input" id="pin" type="tel" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*" autofocus>
+    <input class="pin-input" id="pin" type="tel" maxlength="6" placeholder="000000" inputmode="numeric" pattern="[0-9]*" autofocus>
     <button class="btn" type="submit" id="btn">Отметиться</button>
   </form>
   <div class="msg" id="msg"></div>
@@ -741,7 +753,7 @@ const f=document.getElementById('f'),pin=document.getElementById('pin'),btn=docu
 pin.addEventListener('input',()=>{pin.value=pin.value.replace(/\\D/g,'');msg.className='msg';msg.style.display='none'});
 f.addEventListener('submit',async e=>{
   e.preventDefault();
-  if(pin.value.length<4)return;
+  if(pin.value.length<4)return; // поддержка 4 и 6 цифр
   btn.disabled=true;btn.textContent='...';msg.style.display='none';
   try{
     const r=await fetch('/g/${group.id}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:pin.value})});
