@@ -102,7 +102,7 @@ function _sendReminders(group) {
 }
 
 /**
- * Сколько минут осталось до lessonStartTime (в часовом поясе школы)
+ * Сколько минут осталось до lessonStartTime (в часовом поясе учебного центра)
  */
 function _minutesUntilLesson(lessonTime) {
   const [hh, mm] = lessonTime.split(':').map(Number);
