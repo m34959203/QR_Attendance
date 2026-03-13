@@ -1,0 +1,32 @@
+{
+  "name": "@wa-gateway/api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "@fastify/cors": "^9.0.0",
+    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/swagger": "^8.14.0",
+    "@fastify/swagger-ui": "^3.0.0",
+    "bcrypt": "^5.1.1",
+    "bullmq": "^5.4.0",
+    "fastify-plugin": "^4.5.0",
+    "ioredis": "^5.3.0",
+    "pino": "^8.19.0",
+    "pino-pretty": "^11.0.0",
+    "@wa-gateway/config": "*",
+    "@wa-gateway/db": "*",
+    "@wa-gateway/types": "*"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

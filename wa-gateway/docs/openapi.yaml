@@ -1,0 +1,501 @@
+openapi: 3.1.0
+info:
+  title: WA Gateway API
+  description: WhatsApp API Gateway built on Baileys — self-hosted alternative to Green API
+  version: 1.0.0
+  contact:
+    name: WA Gateway
+servers:
+  - url: /v1
+    description: API v1
+
+security:
+  - apiKey: []
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+      description: Instance API key (returned on creation) or Master API key
+
+  schemas:
+    Instance:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [STARTING, QR_READY, CONNECTED, DISCONNECTED] }
+        phoneNumber: { type: string, nullable: true }
+        webhookUrl: { type: string, nullable: true }
+        settings: { type: object }
+        createdAt: { type: string, format: date-time }
+
+    SendMessageResponse:
+      type: object
+      properties:
+        idMessage: { type: string }
+        status: { type: string, enum: [pending, sent] }
+        timestamp: { type: integer }
+
+    Error:
+      type: object
+      required: [error, message, code]
+      properties:
+        error: { type: string }
+        message: { type: string }
+        code: { type: integer }
+
+    WebhookPayload:
+      type: object
+      properties:
+        typeWebhook: { type: string }
+        instanceData:
+          type: object
+          properties:
+            idInstance: { type: string }
+            phone: { type: string }
+        timestamp: { type: integer }
+        body: { type: object }
+
+paths:
+  /instances:
+    post:
+      summary: Create new instance
+      operationId: createInstance
+      tags: [Instances]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                webhookUrl: { type: string, format: uri }
+                settings:
+                  type: object
+                  properties:
+                    delaySend: { type: number }
+                    keepOnline: { type: boolean }
+      responses:
+        '201':
+          description: Instance created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Instance'
+                  - type: object
+                    properties:
+                      apiKey: { type: string }
+        '400': { description: Invalid webhook URL }
+
+    get:
+      summary: List instances
+      operationId: listInstances
+      tags: [Instances]
+      responses:
+        '200':
+          description: Array of instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Instance' }
+
+  /instances/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+
+    get:
+      summary: Get instance details
+      operationId: getInstance
+      tags: [Instances]
+      responses:
+        '200': { description: Instance details }
+        '404': { description: Not found }
+
+    delete:
+      summary: Delete instance
+      operationId: deleteInstance
+      tags: [Instances]
+      responses:
+        '200': { description: Deleted }
+
+  /instances/{id}/qr:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: Get QR code (base64)
+      operationId: getQR
+      tags: [Instances]
+      responses:
+        '200':
+          description: QR code image
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type: { type: string }
+                  image: { type: string, description: base64 data URI }
+        '409': { description: QR not ready }
+
+  /instances/{id}/status:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: Get connection status
+      operationId: getStatus
+      tags: [Instances]
+      responses:
+        '200':
+          description: Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  phoneNumber: { type: string, nullable: true }
+
+  /instances/{id}/logout:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Logout (keep instance)
+      operationId: logoutInstance
+      tags: [Instances]
+      responses:
+        '200': { description: Logged out }
+
+  /instances/{id}/settings:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      summary: Update instance settings
+      operationId: updateSettings
+      tags: [Instances]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                webhookUrl: { type: string, format: uri }
+                delaySend: { type: number }
+                keepOnline: { type: boolean }
+      responses:
+        '200': { description: Updated }
+
+  /instances/{id}/send/text:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send text message
+      operationId: sendText
+      tags: [Messaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chatId, message]
+              properties:
+                chatId: { type: string, pattern: '^\d+@(s\.whatsapp\.net|g\.us)$' }
+                message: { type: string, maxLength: 10000 }
+                quotedMessageId: { type: string }
+      responses:
+        '200':
+          description: Message queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SendMessageResponse' }
+        '409': { description: Instance not connected }
+
+  /instances/{id}/send/image:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send image
+      operationId: sendImage
+      tags: [Messaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chatId, image]
+              properties:
+                chatId: { type: string }
+                image: { type: string, description: base64 or URL }
+                caption: { type: string }
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/document:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send document
+      operationId: sendDocument
+      tags: [Messaging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chatId, document, fileName]
+              properties:
+                chatId: { type: string }
+                document: { type: string }
+                fileName: { type: string }
+                caption: { type: string }
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/audio:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send audio
+      operationId: sendAudio
+      tags: [Messaging]
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/location:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send location
+      operationId: sendLocation
+      tags: [Messaging]
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/contact:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send contact card
+      operationId: sendContact
+      tags: [Messaging]
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/poll:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send poll
+      operationId: sendPoll
+      tags: [Messaging]
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/reaction:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send reaction
+      operationId: sendReaction
+      tags: [Messaging]
+      responses:
+        '200': { description: Message queued }
+
+  /instances/{id}/send/typing:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Send typing indicator
+      operationId: sendTyping
+      tags: [Messaging]
+      responses:
+        '200': { description: Typing sent }
+
+  /instances/{id}/notifications:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: Get one notification (polling)
+      operationId: getNotification
+      tags: [Notifications]
+      responses:
+        '200':
+          description: Notification or null
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+                properties:
+                  receiptId: { type: integer }
+                  body: { $ref: '#/components/schemas/WebhookPayload' }
+
+  /instances/{id}/notifications/{receiptId}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: receiptId
+        in: path
+        required: true
+        schema: { type: integer }
+    delete:
+      summary: Acknowledge notification
+      operationId: ackNotification
+      tags: [Notifications]
+      responses:
+        '200': { description: Acknowledged }
+        '404': { description: Not found }
+
+  /instances/{id}/chats:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: List chats
+      operationId: getChats
+      tags: [Chats]
+      responses:
+        '200': { description: Chat list }
+
+  /instances/{id}/chats/{chatId}/history:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+      - name: chatId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get chat history
+      operationId: getChatHistory
+      tags: [Chats]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        '200': { description: Message history }
+
+  /instances/{id}/contacts:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: List contacts
+      operationId: getContacts
+      tags: [Contacts]
+      responses:
+        '200': { description: Contact list }
+
+  /instances/{id}/contacts/check:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      summary: Check if number exists on WhatsApp
+      operationId: checkNumber
+      tags: [Contacts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phoneNumber]
+              properties:
+                phoneNumber: { type: string }
+      responses:
+        '200': { description: Check result }
+
+  /instances/{id}/groups:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      summary: List groups
+      operationId: getGroups
+      tags: [Groups]
+      responses:
+        '200': { description: Group list }
+
+    post:
+      summary: Create group
+      operationId: createGroup
+      tags: [Groups]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, participants]
+              properties:
+                name: { type: string }
+                participants: { type: array, items: { type: string } }
+      responses:
+        '200': { description: Group created }

@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// === Инстанс = один WA-аккаунт ===
+
+enum InstanceStatus {
+  STARTING
+  QR_READY
+  CONNECTED
+  DISCONNECTED
+}
+
+model Instance {
+  id          String         @id @default(uuid()) @db.Uuid
+  apiKey      String         @unique
+  status      InstanceStatus @default(STARTING)
+  phoneNumber String?
+  webhookUrl  String?
+  settings    Json           @default("{}")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  messages      Message[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@map("instances")
+}
+
+// === Сообщения ===
+
+enum MessageDirection {
+  OUTGOING
+  INCOMING
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  DOCUMENT
+  AUDIO
+  LOCATION
+  CONTACT
+  POLL
+  REACTION
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model Message {
+  id          String           @id @default(uuid()) @db.Uuid
+  instanceId  String           @db.Uuid
+  messageId   String           // WhatsApp message ID
+  direction   MessageDirection
+  chatId      String           // 77001234567@s.whatsapp.net
+  type        MessageType      @default(TEXT)
+  content     Json             @default("{}") // text, caption, fileName, etc.
+  status      MessageStatus    @default(PENDING)
+  timestamp   DateTime         @default(now())
+
+  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId, timestamp])
+  @@index([instanceId, chatId])
+  @@index([messageId])
+  @@map("messages")
+}
+
+// === Webhook Notifications (для polling) ===
+
+model Notification {
+  id         String   @id @default(uuid()) @db.Uuid
+  instanceId String   @db.Uuid
+  receiptId  BigInt   @unique @default(autoincrement())
+  type       String   // incomingMessageReceived, outgoingMessageStatus, etc.
+  body       Json
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime // TTL 24 часа
+
+  instance Instance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId, createdAt])
+  @@index([expiresAt])
+  @@map("notifications")
+}
+
+// === Аудит-лог ===
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  instanceId String?  @db.Uuid
+  action     String   // send_message, create_instance, delete_instance, etc.
+  details    Json     @default("{}")
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  instance Instance? @relation(fields: [instanceId], references: [id], onDelete: SetNull)
+
+  @@index([instanceId, createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}

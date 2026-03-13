@@ -1,0 +1,26 @@
+{
+  "name": "@wa-gateway/worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.0",
+    "bullmq": "^5.4.0",
+    "ioredis": "^5.3.0",
+    "pino": "^8.19.0",
+    "qrcode": "^1.5.3",
+    "@wa-gateway/config": "*",
+    "@wa-gateway/db": "*",
+    "@wa-gateway/types": "*"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}
