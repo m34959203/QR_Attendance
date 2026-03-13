@@ -82,7 +82,7 @@ async function sendArrival({ to, parentName, studentName, time, date, isLate, mi
 
 async function sendTest(to, school) {
   await send(to, `[${school}] Тестовое письмо`,
-    `<p>✅ Email-уведомления настроены корректно.</p><p>Школа: <b>${school}</b></p>`);
+    `<p>✅ Email-уведомления настроены корректно.</p><p>Учебный центр: <b>${school}</b></p>`);
 }
 
 function getStatus() {
