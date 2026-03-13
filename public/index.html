@@ -287,6 +287,7 @@ tr:hover td{background:#fafbfd}
         📥 Импорт CSV/Excel
         <input type="file" accept=".csv,.xlsx" style="display:none" onchange="importStudents(this)">
       </label>
+      <button class="btn btn-outline" onclick="printConsentForm()">📝 Бланк согласия ПД</button>
       <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#666;cursor:pointer">
         <input type="checkbox" id="show-archived" onchange="loadStudents()">
         Показать архивных
@@ -366,8 +367,8 @@ tr:hover td{background:#fafbfd}
   <div class="card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
-        <div style="font-size:20px;font-weight:800">Green API</div>
-        <div style="font-size:12px;color:#aaa">Провайдер WhatsApp уведомлений</div>
+        <div style="font-size:20px;font-weight:800" id="wa-provider-name">WhatsApp</div>
+        <div style="font-size:12px;color:#aaa" id="wa-provider-desc">Провайдер WhatsApp уведомлений</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="wa-dot2"></div>
@@ -376,6 +377,23 @@ tr:hover td{background:#fafbfd}
       </div>
     </div>
     <div id="wa-detail" style="font-size:13px;color:#888;margin-bottom:16px"></div>
+
+    <!-- QR-код для Baileys -->
+    <div id="wa-qr-block" style="display:none;text-align:center;margin-bottom:20px">
+      <p style="font-size:14px;color:#555;margin-bottom:12px">Откройте <b>WhatsApp</b> на телефоне → <b>Связанные устройства</b> → <b>Привязать устройство</b></p>
+      <img id="wa-qr-img" style="max-width:280px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15)" alt="QR">
+      <p style="font-size:12px;color:#aaa;margin-top:8px">QR обновляется автоматически</p>
+    </div>
+
+    <!-- Кнопки управления Baileys -->
+    <div id="wa-baileys-actions" style="display:none;margin-bottom:16px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="waRestart()">🔄 Переподключить</button>
+        <button class="btn btn-outline btn-sm" style="color:#e53935" onclick="waLogout()">🚪 Выйти из WhatsApp</button>
+      </div>
+      <div id="wa-phone-info" style="font-size:13px;color:#888;margin-top:8px"></div>
+    </div>
+
     <div class="wa-stat-row">
       <div class="wa-stat"><div class="n" id="ws-sent">—</div><div class="l">Отправлено</div></div>
       <div class="wa-stat"><div class="n" id="ws-fail">—</div><div class="l">Ошибки</div></div>
@@ -633,7 +651,7 @@ async function loadDashboard() {
   const steps = [
     { done: d.groups > 0,   icon:'🏫', text:'Создать группу (класс/секцию)' },
     { done: d.students > 0, icon:'👥', text:'Добавить учеников' },
-    { done: waOk,           icon:'📱', text:'Подключить WhatsApp (Green API)' },
+    { done: waOk,           icon:'📱', text:'Подключить WhatsApp' },
   ];
   const onboard = document.getElementById('dash-onboard');
   const allDone = steps.every(s => s.done);
@@ -1157,8 +1175,19 @@ td{padding:4px 8px;vertical-align:top}
 // ════════════════════════════════════════════════════════════════
 // WHATSAPP
 // ════════════════════════════════════════════════════════════════
+let _waQrTimer = null;
+
 async function loadWAStatus() {
   const r = await api('/api/whatsapp/status');
+  const isBaileys = r.provider === 'baileys';
+  const providerLabels = { baileys:'Baileys (бесплатный)', greenapi:'Green API', twilio:'Twilio', wwebjs:'WWebJS' };
+
+  // Название провайдера
+  const pName = document.getElementById('wa-provider-name');
+  if (pName) pName.textContent = providerLabels[r.provider] || r.provider;
+  const pDesc = document.getElementById('wa-provider-desc');
+  if (pDesc) pDesc.textContent = isBaileys ? 'Прямое подключение через QR-код' : 'Провайдер WhatsApp уведомлений';
+
   const states = {
     authorized:    { cls:'ready', label:'Подключён ✅' },
     notAuthorized: { cls:'warn',  label:'Нужна авторизация ⚠️' },
@@ -1170,14 +1199,44 @@ async function loadWAStatus() {
   const sl = document.getElementById('wa-status-label');
   if (sl) sl.textContent = label;
 
+  // Детали
   const det = document.getElementById('wa-detail');
   if (det) {
-    det.innerHTML = r.state==='notAuthorized'
-      ? '❗ Зайдите на <b>green-api.com</b> → инстанс → «Сканировать QR» → подключите WhatsApp'
-      : r.state==='error'
-      ? '❗ Проверьте <code>GREEN_API_INSTANCE_ID</code> и <code>GREEN_API_TOKEN</code> в <code>.env</code>'
-      : 'Green API работает нормально';
+    if (isBaileys) {
+      det.innerHTML = r.state==='authorized'
+        ? (r.phoneNumber ? 'Номер: <b>+'+esc(r.phoneNumber)+'</b>' : 'WhatsApp подключён')
+        : r.state==='error'
+        ? '❗ Ошибка подключения. Нажмите «Переподключить»'
+        : 'Отсканируйте QR-код ниже в WhatsApp';
+    } else {
+      det.innerHTML = r.state==='notAuthorized'
+        ? '❗ Зайдите на <b>green-api.com</b> → инстанс → «Сканировать QR» → подключите WhatsApp'
+        : r.state==='error'
+        ? '❗ Проверьте <code>GREEN_API_INSTANCE_ID</code> и <code>GREEN_API_TOKEN</code> в <code>.env</code>'
+        : 'Green API работает нормально';
+    }
   }
+
+  // Baileys: QR блок
+  const qrBlock = document.getElementById('wa-qr-block');
+  const actionsBlock = document.getElementById('wa-baileys-actions');
+  if (isBaileys) {
+    if (actionsBlock) actionsBlock.style.display = '';
+    const phoneInfo = document.getElementById('wa-phone-info');
+    if (phoneInfo && r.phoneNumber) phoneInfo.textContent = 'Привязанный номер: +' + r.phoneNumber;
+    else if (phoneInfo) phoneInfo.textContent = '';
+
+    if (r.state !== 'authorized' && r.hasQR !== false) {
+      _startQrPolling();
+    } else {
+      _stopQrPolling();
+      if (qrBlock) qrBlock.style.display = 'none';
+    }
+  } else {
+    if (qrBlock) qrBlock.style.display = 'none';
+    if (actionsBlock) actionsBlock.style.display = 'none';
+  }
+
   document.getElementById('ws-sent').textContent  = r.sent    ?? '—';
   document.getElementById('ws-fail').textContent  = r.failed  ?? '—';
   document.getElementById('ws-queue').textContent = r.pending ?? 0;
@@ -1193,6 +1252,43 @@ async function loadWAStatus() {
       <td><span class="badge ${m.cls}">${m.lbl}</span></td>
       <td style="font-size:12px">${esc(l.note||'')}</td></tr>`;
   }).join('') : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">Сообщений пока нет</td></tr>';
+}
+
+function _startQrPolling() {
+  if (_waQrTimer) return;
+  _loadQr();
+  _waQrTimer = setInterval(_loadQr, 5000);
+}
+function _stopQrPolling() {
+  if (_waQrTimer) { clearInterval(_waQrTimer); _waQrTimer = null; }
+}
+async function _loadQr() {
+  const r = await api('/api/whatsapp/qr');
+  const block = document.getElementById('wa-qr-block');
+  const img = document.getElementById('wa-qr-img');
+  if (r.qr) {
+    if (block) block.style.display = '';
+    if (img) img.src = r.qr;
+  } else {
+    if (block) block.style.display = 'none';
+    // QR исчез — значит либо авторизовались, либо таймаут. Обновим статус.
+    _stopQrPolling();
+    loadWAStatus();
+  }
+}
+
+async function waLogout() {
+  if (!confirm('Выйти из WhatsApp? Потребуется повторная авторизация через QR.')) return;
+  const r = await api('/api/whatsapp/logout', {method:'POST'});
+  r.error ? toast('Ошибка: '+r.error,'err') : toast('Вышли из WhatsApp');
+  loadWAStatus();
+}
+
+async function waRestart() {
+  toast('Переподключение...');
+  const r = await api('/api/whatsapp/restart', {method:'POST'});
+  r.error ? toast('Ошибка: '+r.error,'err') : toast('Переподключение запущено');
+  setTimeout(loadWAStatus, 3000);
 }
 
 async function sendTestWA() {

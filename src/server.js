@@ -530,6 +530,30 @@ app.post('/api/whatsapp/test', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Baileys: QR-код для авторизации
+app.get('/api/whatsapp/qr', (req, res) => {
+  const qr = wa.getQR();
+  res.json({ qr });
+});
+
+// Baileys: выход из WhatsApp
+app.post('/api/whatsapp/logout', async (req, res) => {
+  try {
+    await wa.logout();
+    db.audit('wa_logout', 'whatsapp', '', '', req.adminIp);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Baileys: перезапуск подключения
+app.post('/api/whatsapp/restart', async (req, res) => {
+  try {
+    await wa.restart();
+    db.audit('wa_restart', 'whatsapp', '', '', req.adminIp);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/telegram/status', async (req, res) => res.json(await tg.getStatus()));
 
 app.post('/api/telegram/test', async (req, res) => {
