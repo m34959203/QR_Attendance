@@ -7,7 +7,11 @@
 <title>Помощь — QR Посещаемость</title>
 <style>
 :root{--c-primary:#2E5FA3;--c-primary-light:#4472C4;--c-bg:#f5f7fa;--c-text:#333;--c-text-secondary:#555;--c-text-heading:#1a1a2e;--c-card:#fff;--c-card-shadow:rgba(0,0,0,.06);--c-code-bg:#f0f0f0;--c-highlight-bg:#e8f5e9;--c-highlight-border:#27ae60;--c-highlight-text:#2e7d32;--c-warn-bg:#fff3e0;--c-warn-border:#f39c12;--c-warn-text:#7a4f00;--c-footer:#aaa;--c-border:#e8ecf2}
-@media(prefers-color-scheme:dark){:root{--c-bg:#1a1a2e;--c-text:#e0e0e0;--c-text-secondary:#b0b0b0;--c-text-heading:#f0f0f0;--c-card:#242442;--c-card-shadow:rgba(0,0,0,.3);--c-code-bg:#2a2a4a;--c-highlight-bg:#1a3a2a;--c-highlight-border:#27ae60;--c-highlight-text:#6fcf8a;--c-warn-bg:#3a2a1a;--c-warn-border:#f39c12;--c-warn-text:#ffc966;--c-footer:#777;--c-border:#3a3a5a}}
+html[data-theme="dark"]{--c-bg:#1a1a2e;--c-text:#e0e0e0;--c-text-secondary:#b0b0b0;--c-text-heading:#f0f0f0;--c-card:#242442;--c-card-shadow:rgba(0,0,0,.3);--c-code-bg:#2a2a4a;--c-highlight-bg:#1a3a2a;--c-highlight-border:#27ae60;--c-highlight-text:#6fcf8a;--c-warn-bg:#3a2a1a;--c-warn-border:#f39c12;--c-warn-text:#ffc966;--c-footer:#777;--c-border:#3a3a5a}
+.top-bar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px}
+.top-btn{background:var(--c-primary);border:none;color:#fff;border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-weight:600}
+.top-btn:hover{opacity:.85}
+.lang-btn.active{background:var(--c-primary-light)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--c-bg);color:var(--c-text);line-height:1.7}
 .wrap{max-width:720px;margin:0 auto;padding:40px 24px}
@@ -34,93 +38,146 @@ footer a{color:var(--c-primary);text-decoration:none}
 <body>
 <div class="wrap">
 
+<div class="top-bar">
+  <button class="top-btn" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+  <button class="top-btn lang-btn active" id="lang-ru" onclick="setLang('ru')">RU</button>
+  <button class="top-btn lang-btn" id="lang-kk" onclick="setLang('kk')">ҚЗ</button>
+</div>
+
 <header>
-  <h1>📱 Помощь для родителей</h1>
-  <p>Как работает система уведомлений о посещаемости</p>
+  <h1>📱 <span data-i18n="title">Помощь для родителей</span></h1>
+  <p data-i18n="subtitle">Как работает система уведомлений о посещаемости</p>
 </header>
 
 <div class="card">
-  <h2>Как это работает</h2>
+  <h2 data-i18n="howItWorks">Как это работает</h2>
   <div class="step">
     <div class="step-num">1</div>
-    <div class="step-body"><h3>QR-код у входа</h3><p>У входа в кабинет висит QR-код группы. Ученик вводит свой PIN-код.</p></div>
+    <div class="step-body"><h3 data-i18n="s1t">QR-код у входа</h3><p data-i18n="s1d">У входа в кабинет висит QR-код группы. Ученик вводит свой PIN-код.</p></div>
   </div>
   <div class="step">
     <div class="step-num">2</div>
-    <div class="step-body"><h3>Ученик сканирует</h3><p>Ученик наводит камеру телефона на QR-код. Телефон предлагает открыть ссылку — нажать «Открыть».</p></div>
+    <div class="step-body"><h3 data-i18n="s2t">Ученик сканирует</h3><p data-i18n="s2d">Ученик наводит камеру телефона на QR-код. Телефон предлагает открыть ссылку — нажать «Открыть».</p></div>
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-body"><h3>Система фиксирует время</h3><p>Страница подтверждает приход и показывает время. Устанавливать приложение не нужно.</p></div>
+    <div class="step-body"><h3 data-i18n="s3t">Система фиксирует время</h3><p data-i18n="s3d">Страница подтверждает приход и показывает время. Устанавливать приложение не нужно.</p></div>
   </div>
   <div class="step">
     <div class="step-num">4</div>
-    <div class="step-body"><h3>Вы получаете уведомление</h3><p>На ваш WhatsApp или Telegram приходит сообщение с именем ребёнка и временем прихода.</p></div>
+    <div class="step-body"><h3 data-i18n="s4t">Вы получаете уведомление</h3><p data-i18n="s4d">На ваш WhatsApp или Telegram приходит сообщение с именем ребёнка и временем прихода.</p></div>
   </div>
-
-  <div class="highlight">✅ Всё происходит автоматически. Ничего устанавливать не нужно.</div>
+  <div class="highlight" data-i18n="autoHint">✅ Всё происходит автоматически. Ничего устанавливать не нужно.</div>
 </div>
 
 <div class="card">
-  <h2>Подключить Telegram-уведомления</h2>
+  <h2 data-i18n="connectTG">Подключить Telegram-уведомления</h2>
   <div class="step">
     <div class="step-num">1</div>
-    <div class="step-body"><h3>Найдите бота</h3><p>Педагог даст вам ссылку или имя Telegram-бота (начинается с @).</p></div>
+    <div class="step-body"><h3 data-i18n="tg1t">Найдите бота</h3><p data-i18n="tg1d">Педагог даст вам ссылку или имя Telegram-бота (начинается с @).</p></div>
   </div>
   <div class="step">
     <div class="step-num">2</div>
-    <div class="step-body"><h3>Напишите /start</h3><p>Откройте бота и отправьте команду <code>/start</code>. Бот ответит вашим кодом (chat_id).</p></div>
+    <div class="step-body"><h3 data-i18n="tg2t">Напишите /start</h3><p data-i18n="tg2d">Откройте бота и отправьте команду <code>/start</code>. Бот ответит вашим кодом (chat_id).</p></div>
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-body"><h3>Передайте код педагогу</h3><p>Сообщите педагогу ваш код — он привяжет его к карточке ученика. После этого уведомления будут приходить в Telegram.</p></div>
+    <div class="step-body"><h3 data-i18n="tg3t">Передайте код педагогу</h3><p data-i18n="tg3d">Сообщите педагогу ваш код — он привяжет его к карточке ученика. После этого уведомления будут приходить в Telegram.</p></div>
   </div>
 </div>
 
 <div class="card">
-  <h2>Часто задаваемые вопросы</h2>
-
+  <h2 data-i18n="faq">Часто задаваемые вопросы</h2>
   <div class="faq-item">
-    <div class="faq-q">📲 Почему я не получаю уведомления?</div>
-    <div class="faq-a">Проверьте: 1) ученик сканировал QR-код и ввёл PIN? 2) уведомления от WhatsApp не заблокированы? 3) верно ли указан номер — обратитесь к педагогу для проверки.</div>
+    <div class="faq-q" data-i18n="fq1q">📲 Почему я не получаю уведомления?</div>
+    <div class="faq-a" data-i18n="fq1a">Проверьте: 1) ученик сканировал QR-код и ввёл PIN? 2) уведомления от WhatsApp не заблокированы? 3) верно ли указан номер — обратитесь к педагогу для проверки.</div>
   </div>
-
   <div class="faq-item">
-    <div class="faq-q">⚠️ Что значит «опоздание»?</div>
-    <div class="faq-a">Если ученик отметился позже установленного времени начала занятия, в уведомлении будет указано время опоздания в минутах.</div>
+    <div class="faq-q" data-i18n="fq2q">⚠️ Что значит «опоздание»?</div>
+    <div class="faq-a" data-i18n="fq2a">Если ученик отметился позже установленного времени начала занятия, в уведомлении будет указано время опоздания в минутах.</div>
   </div>
-
   <div class="faq-item">
-    <div class="faq-q">🔒 Мои данные в безопасности?</div>
-    <div class="faq-a">Мы храним только то, что необходимо для уведомлений: имя ребёнка, ваш номер/Telegram. Данные не передаются рекламным сетям. Подробнее — в <a href="/privacy">Политике конфиденциальности</a>.</div>
+    <div class="faq-q" data-i18n="fq3q">🔒 Мои данные в безопасности?</div>
+    <div class="faq-a" data-i18n="fq3a">Мы храним только то, что необходимо для уведомлений: имя ребёнка, ваш номер/Telegram. Данные не передаются рекламным сетям. Подробнее — в <a href="/privacy">Құпиялылық саясаты / Политике конфиденциальности</a>.</div>
   </div>
-
   <div class="faq-item">
-    <div class="faq-q">🚫 Как отписаться от уведомлений?</div>
-    <div class="faq-a">Telegram: напишите боту команду <code>/stop</code>. WhatsApp: обратитесь к педагогу для удаления номера из системы.</div>
+    <div class="faq-q" data-i18n="fq4q">🚫 Как отписаться от уведомлений?</div>
+    <div class="faq-a" data-i18n="fq4a">Telegram: напишите боту команду <code>/stop</code>. WhatsApp: обратитесь к педагогу для удаления номера из системы.</div>
   </div>
-
   <div class="faq-item">
-    <div class="faq-q">🗑 Как удалить данные ребёнка?</div>
-    <div class="faq-a">Обратитесь к педагогу с просьбой об удалении. Все данные — история посещаемости, номер, Telegram — будут полностью удалены из системы.</div>
+    <div class="faq-q" data-i18n="fq5q">🗑 Как удалить данные ребёнка?</div>
+    <div class="faq-a" data-i18n="fq5a">Обратитесь к педагогу с просьбой об удалении. Все данные — история посещаемости, номер, Telegram — будут полностью удалены из системы.</div>
   </div>
-
   <div class="faq-item">
-    <div class="faq-q">📱 У ученика нет смартфона — как быть?</div>
-    <div class="faq-a">Педагог может вручную отметить присутствие через панель управления.</div>
+    <div class="faq-q" data-i18n="fq6q">📱 У ученика нет смартфона — как быть?</div>
+    <div class="faq-a" data-i18n="fq6a">Педагог может вручную отметить присутствие через панель управления.</div>
   </div>
 </div>
 
 <div class="card">
-  <div class="warn">
-    Остались вопросы? Обратитесь напрямую к педагогу или администратору.
-  </div>
+  <div class="warn" data-i18n="questions">Остались вопросы? Обратитесь напрямую к педагогу или администратору.</div>
 </div>
 
 <footer>
-  <a href="/privacy">Политика конфиденциальности</a>
+  <a href="/privacy" data-i18n="privacyLink">Политика конфиденциальности</a>
 </footer>
 
 </div>
+<script>
+const _themeStates=['auto','light','dark'],_themeIcons={auto:'🌗',light:'☀️',dark:'🌙'};
+let _themeIdx=_themeStates.indexOf(localStorage.getItem('theme')||'auto');if(_themeIdx<0)_themeIdx=0;
+function _applyTheme(){const m=_themeStates[_themeIdx];localStorage.setItem('theme',m);const d=m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('theme-toggle').textContent=_themeIcons[m]}
+function toggleTheme(){_themeIdx=(_themeIdx+1)%3;_applyTheme()}
+_applyTheme();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(_themeStates[_themeIdx]==='auto')_applyTheme()});
+
+let _lang=localStorage.getItem('lang')||'ru';
+const _i18n={
+  title:{ru:'Помощь для родителей',kk:'Ата-аналарға көмек'},
+  subtitle:{ru:'Как работает система уведомлений о посещаемости',kk:'Қатысу хабарлама жүйесі қалай жұмыс істейді'},
+  howItWorks:{ru:'Как это работает',kk:'Бұл қалай жұмыс істейді'},
+  s1t:{ru:'QR-код у входа',kk:'Кіреберісте QR-код'},
+  s1d:{ru:'У входа в кабинет висит QR-код группы. Ученик вводит свой PIN-код.',kk:'Кабинет кіреберісінде топтың QR-коды ілулі тұрады. Оқушы өзінің PIN-кодын енгізеді.'},
+  s2t:{ru:'Ученик сканирует',kk:'Оқушы сканерлейді'},
+  s2d:{ru:'Ученик наводит камеру телефона на QR-код. Телефон предлагает открыть ссылку — нажать «Открыть».',kk:'Оқушы телефон камерасын QR-кодқа бағыттайды. Телефон сілтемені ашуды ұсынады — «Ашу» басу керек.'},
+  s3t:{ru:'Система фиксирует время',kk:'Жүйе уақытты тіркейді'},
+  s3d:{ru:'Страница подтверждает приход и показывает время. Устанавливать приложение не нужно.',kk:'Бет келуді растайды және уақытты көрсетеді. Қосымша орнату қажет емес.'},
+  s4t:{ru:'Вы получаете уведомление',kk:'Сіз хабарлама аласыз'},
+  s4d:{ru:'На ваш WhatsApp или Telegram приходит сообщение с именем ребёнка и временем прихода.',kk:'WhatsApp немесе Telegram-ға баланың аты мен келу уақыты жазылған хабарлама келеді.'},
+  autoHint:{ru:'✅ Всё происходит автоматически. Ничего устанавливать не нужно.',kk:'✅ Бәрі автоматты түрде болады. Ештеңе орнату қажет емес.'},
+  connectTG:{ru:'Подключить Telegram-уведомления',kk:'Telegram хабарламаларын қосу'},
+  tg1t:{ru:'Найдите бота',kk:'Ботты табыңыз'},
+  tg1d:{ru:'Педагог даст вам ссылку или имя Telegram-бота (начинается с @).',kk:'Педагог сізге Telegram-бот сілтемесін немесе атын береді (@ белгісімен басталады).'},
+  tg2t:{ru:'Напишите /start',kk:'/start жазыңыз'},
+  tg2d:{ru:'Откройте бота и отправьте команду <code>/start</code>. Бот ответит вашим кодом (chat_id).',kk:'Ботты ашыңыз және <code>/start</code> командасын жіберіңіз. Бот сіздің кодыңызбен (chat_id) жауап береді.'},
+  tg3t:{ru:'Передайте код педагогу',kk:'Кодты педагогқа беріңіз'},
+  tg3d:{ru:'Сообщите педагогу ваш код — он привяжет его к карточке ученика. После этого уведомления будут приходить в Telegram.',kk:'Педагогқа кодыңызды айтыңыз — ол оқушы картасына байланыстырады. Осыдан кейін хабарламалар Telegram-ға келеді.'},
+  faq:{ru:'Часто задаваемые вопросы',kk:'Жиі қойылатын сұрақтар'},
+  fq1q:{ru:'📲 Почему я не получаю уведомления?',kk:'📲 Неге маған хабарлама келмейді?'},
+  fq1a:{ru:'Проверьте: 1) ученик сканировал QR-код и ввёл PIN? 2) уведомления от WhatsApp не заблокированы? 3) верно ли указан номер — обратитесь к педагогу для проверки.',kk:'Тексеріңіз: 1) оқушы QR-кодты сканерлеп, PIN енгізді ме? 2) WhatsApp хабарламалары бұғатталмаған ба? 3) нөмір дұрыс көрсетілген бе — тексеру үшін педагогқа хабарласыңыз.'},
+  fq2q:{ru:'⚠️ Что значит «опоздание»?',kk:'⚠️ «Кешігу» нені білдіреді?'},
+  fq2a:{ru:'Если ученик отметился позже установленного времени начала занятия, в уведомлении будет указано время опоздания в минутах.',kk:'Егер оқушы сабақтың басталу уақытынан кеш белгіленсе, хабарламада кешігу уақыты минутпен көрсетіледі.'},
+  fq3q:{ru:'🔒 Мои данные в безопасности?',kk:'🔒 Менің деректерім қауіпсіз бе?'},
+  fq3a:{ru:'Мы храним только то, что необходимо для уведомлений: имя ребёнка, ваш номер/Telegram. Данные не передаются рекламным сетям. Подробнее — в <a href="/privacy">Политике конфиденциальности</a>.',kk:'Біз тек хабарлама үшін қажетті ақпаратты сақтаймыз: баланың аты, сіздің нөміріңіз/Telegram. Деректер жарнама желілеріне берілмейді. Толығырақ — <a href="/privacy">Құпиялылық саясатында</a>.'},
+  fq4q:{ru:'🚫 Как отписаться от уведомлений?',kk:'🚫 Хабарламалардан қалай бас тартуға болады?'},
+  fq4a:{ru:'Telegram: напишите боту команду <code>/stop</code>. WhatsApp: обратитесь к педагогу для удаления номера из системы.',kk:'Telegram: ботқа <code>/stop</code> командасын жазыңыз. WhatsApp: нөмірді жүйеден жою үшін педагогқа хабарласыңыз.'},
+  fq5q:{ru:'🗑 Как удалить данные ребёнка?',kk:'🗑 Баланың деректерін қалай жоюға болады?'},
+  fq5a:{ru:'Обратитесь к педагогу с просьбой об удалении. Все данные — история посещаемости, номер, Telegram — будут полностью удалены из системы.',kk:'Педагогқа жою туралы өтініш білдіріңіз. Барлық деректер — қатысу тарихы, нөмір, Telegram — жүйеден толығымен жойылады.'},
+  fq6q:{ru:'📱 У ученика нет смартфона — как быть?',kk:'📱 Оқушыда смартфон жоқ — не істеу керек?'},
+  fq6a:{ru:'Педагог может вручную отметить присутствие через панель управления.',kk:'Педагог басқару панелі арқылы қатысуды қолмен белгілей алады.'},
+  questions:{ru:'Остались вопросы? Обратитесь напрямую к педагогу или администратору.',kk:'Сұрақтарыңыз бар ма? Тікелей педагогқа немесе әкімшіге хабарласыңыз.'},
+  privacyLink:{ru:'Политика конфиденциальности',kk:'Құпиялылық саясаты'},
+};
+function t(k){return (_i18n[k]&&_i18n[k][_lang])||k}
+function _applyLang(){
+  localStorage.setItem('lang',_lang);
+  document.documentElement.lang=_lang==='kk'?'kk':'ru';
+  document.getElementById('lang-ru').classList.toggle('active',_lang==='ru');
+  document.getElementById('lang-kk').classList.toggle('active',_lang==='kk');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(_i18n[k])el.innerHTML=_i18n[k][_lang]||_i18n[k].ru});
+  document.title=t('title')+' — QR '+(_lang==='kk'?'Қатысу':'Посещаемость');
+}
+function setLang(l){_lang=l;_applyLang()}
+_applyLang();
+</script>
 </body>
 </html>

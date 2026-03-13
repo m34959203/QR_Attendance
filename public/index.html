@@ -22,19 +22,17 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--c-bg);color:var(--c-text);transition:background .3s,color .3s}
 
-/* ── Тёмная тема ── */
-@media(prefers-color-scheme:dark){
-  :root{
-    --c-text:#e4e6eb;--c-text2:#b0b3b8;--c-text3:#8a8d91;--c-text4:#6a6c70;
-    --c-bg:#18191a;--c-card:#242526;--c-border:#3e4042;--c-input-border:#4e4f50;
-    --c-surface:#2d2e2f;--c-primary-hover:#5a8fd4;
-    --c-ok-bg:#1b3a26;--c-ok-text:#66bb6a;
-    --c-warn-bg:#3e2a10;--c-warn-text:#ffb74d;
-    --c-err-bg:#3e1a1a;--c-err-text:#ef9a9a;
-    --shadow-sm:0 2px 8px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4);
-  }
-  img{opacity:.92}
+/* ── Тёмная тема (управляется через data-theme) ── */
+html[data-theme="dark"]{
+  --c-text:#e4e6eb;--c-text2:#b0b3b8;--c-text3:#8a8d91;--c-text4:#6a6c70;
+  --c-bg:#18191a;--c-card:#242526;--c-border:#3e4042;--c-input-border:#4e4f50;
+  --c-surface:#2d2e2f;--c-primary-hover:#5a8fd4;
+  --c-ok-bg:#1b3a26;--c-ok-text:#66bb6a;
+  --c-warn-bg:#3e2a10;--c-warn-text:#ffb74d;
+  --c-err-bg:#3e1a1a;--c-err-text:#ef9a9a;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4);
 }
+html[data-theme="dark"] img{opacity:.92}
 
 /* ── Шапка ── */
 header{background:linear-gradient(135deg,var(--c-primary),var(--c-primary-light));padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
@@ -42,6 +40,9 @@ header h1{color:#fff;font-size:17px;font-weight:700}
 .header-right{display:flex;align-items:center;gap:10px}
 .wa-badge{display:flex;align-items:center;gap:7px;cursor:pointer;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 12px}
 .wa-badge span{color:#fff;font-size:12px;font-weight:500}
+.hdr-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;font-weight:600;transition:.15s;min-height:32px;display:inline-flex;align-items:center;gap:4px}
+.hdr-btn:hover{background:rgba(255,255,255,.25)}
+.lang-btn.active{background:rgba(255,255,255,.35)}
 
 /* ── Вкладки (a11y: role=tablist) ── */
 .tabs{background:var(--c-card);display:flex;overflow-x:auto;border-bottom:2px solid var(--c-border);padding:0 12px;position:sticky;top:49px;z-index:40;scrollbar-width:thin}
@@ -273,8 +274,11 @@ td[title]{cursor:help}
 <body>
 
 <header>
-  <h1>🎓 QR Посещаемость</h1>
+  <h1>🎓 <span data-i18n="appTitle">QR Посещаемость</span></h1>
   <div class="header-right">
+    <button class="hdr-btn" id="theme-toggle" onclick="toggleTheme()" title="Тема">🌙</button>
+    <button class="hdr-btn lang-btn active" id="lang-ru" onclick="setLang('ru')">RU</button>
+    <button class="hdr-btn lang-btn" id="lang-kk" onclick="setLang('kk')">ҚЗ</button>
     <div class="wa-badge" id="wa-badge" onclick="showTab('whatsapp')">
       <div class="dot" id="wa-dot"></div>
       <span id="wa-text">WA...</span>
@@ -283,16 +287,16 @@ td[title]{cursor:help}
 </header>
 
 <nav class="tabs" role="tablist" aria-label="Навигация">
-  <button class="tab active" role="tab" aria-selected="true" aria-controls="tab-dashboard" onclick="showTab('dashboard')">📊 Сегодня</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-students" onclick="showTab('students')">👥 Ученики</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-groups" onclick="showTab('groups')">📚 Группы</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-attendance" onclick="showTab('attendance')">📋 Журнал</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-stats" onclick="showTab('stats')">📈 Статистика</button>
+  <button class="tab active" role="tab" aria-selected="true" aria-controls="tab-dashboard" onclick="showTab('dashboard')">📊 <span data-i18n="tabToday">Сегодня</span></button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-students" onclick="showTab('students')">👥 <span data-i18n="tabStudents">Ученики</span></button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-groups" onclick="showTab('groups')">📚 <span data-i18n="tabGroups">Группы</span></button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-attendance" onclick="showTab('attendance')">📋 <span data-i18n="tabJournal">Журнал</span></button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-stats" onclick="showTab('stats')">📈 <span data-i18n="tabStats">Статистика</span></button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-whatsapp" onclick="showTab('whatsapp')">📱 WhatsApp</button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-telegram" onclick="showTab('telegram')">📨 Telegram</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-audit" onclick="showTab('audit')">🔍 Аудит</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-audit" onclick="showTab('audit')">🔍 <span data-i18n="tabAudit">Аудит</span></button>
   <button class="tab" role="tab" aria-selected="false" aria-controls="tab-email" onclick="showTab('email')">📧 Email</button>
-  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-errors" onclick="showTab('errors')">⚠️ Ошибки</button>
+  <button class="tab" role="tab" aria-selected="false" aria-controls="tab-errors" onclick="showTab('errors')">⚠️ <span data-i18n="tabErrors">Ошибки</span></button>
 </nav>
 
 <div class="content">
@@ -300,25 +304,25 @@ td[title]{cursor:help}
 <!-- ══════════════════════════════ ДАШБОРД ══════════════════════════════ -->
 <div id="tab-dashboard" role="tabpanel" aria-label="Сегодня">
   <div id="dash-onboard" style="display:none" class="onboard">
-    <h2>👋 Добро пожаловать!</h2>
-    <p style="color:#666;margin-bottom:20px;font-size:14px">Система готова к работе. Выполните несколько шагов для начала:</p>
+    <h2>👋 <span data-i18n="welcome">Добро пожаловать!</span></h2>
+    <p style="color:#666;margin-bottom:20px;font-size:14px" data-i18n="welcomeDesc">Система готова к работе. Выполните несколько шагов для начала:</p>
     <div class="checklist" id="onboard-checklist"></div>
-    <button class="btn btn-primary" onclick="showTab('groups')">Начать настройку →</button>
+    <button class="btn btn-primary" onclick="showTab('groups')" data-i18n="startSetup">Начать настройку →</button>
   </div>
   <div class="dash-grid" id="dash-cards"></div>
   <div class="card no-print" id="dash-chart-card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3>Посещаемость за 7 дней</h3>
+      <h3 data-i18n="chart7days">Посещаемость за 7 дней</h3>
     </div>
     <div id="dash-chart" style="display:flex;align-items:flex-end;gap:8px;height:80px"></div>
   </div>
   <div class="card no-print">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3>Последние сканирования</h3>
+      <h3 data-i18n="recentScans">Последние сканирования</h3>
       <button class="btn btn-outline btn-sm" onclick="loadDashboard()" aria-label="Обновить">🔄</button>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>Ученик</th><th>Группа</th><th>Время</th><th>Статус</th></tr></thead>
+      <table><thead><tr><th data-i18n="student">Ученик</th><th data-i18n="group">Группа</th><th data-i18n="time">Время</th><th data-i18n="status">Статус</th></tr></thead>
       <tbody id="dash-recent"></tbody></table>
     </div>
   </div>
@@ -327,69 +331,69 @@ td[title]{cursor:help}
 <!-- ══════════════════════════════ УЧЕНИКИ ══════════════════════════════ -->
 <div id="tab-students" role="tabpanel" aria-label="Ученики" style="display:none">
   <div class="card no-print">
-    <h2 style="margin-bottom:16px">➕ Добавить ученика</h2>
+    <h2 style="margin-bottom:16px">➕ <span data-i18n="addStudent">Добавить ученика</span></h2>
     <div class="form-section">
-      <div class="form-section-title">Ученик</div>
+      <div class="form-section-title" data-i18n="sectionStudent">Ученик</div>
       <div class="form-row">
         <div class="field" id="field-name" style="flex:2;min-width:180px">
-          <label>Имя ученика <span class="req">*</span></label>
-          <input id="f-name" type="text" placeholder="Алия Иванова" required autocomplete="name">
-          <span class="error-msg">Введите имя ученика</span>
+          <label><span data-i18n="studentName">Имя ученика</span> <span class="req">*</span></label>
+          <input id="f-name" type="text" data-i18n-ph="phStudentName" placeholder="Алия Иванова" required autocomplete="name">
+          <span class="error-msg" data-i18n="errStudentName">Введите имя ученика</span>
         </div>
         <div class="field">
-          <label>Группа</label>
-          <select id="f-group"><option value="">— без группы —</option></select>
+          <label data-i18n="group">Группа</label>
+          <select id="f-group"><option value="" data-i18n="noGroup">— без группы —</option></select>
         </div>
         <div class="field">
-          <label>Дата согласия ПД</label>
+          <label data-i18n="consentDate">Дата согласия ПД</label>
           <input id="f-consent" type="date">
-          <span class="hint">Обязательно для GDPR</span>
+          <span class="hint" data-i18n="gdprRequired">Обязательно для GDPR</span>
         </div>
       </div>
     </div>
     <div class="form-section">
-      <div class="form-section-title">Контакты родителя</div>
+      <div class="form-section-title" data-i18n="sectionParent">Контакты родителя</div>
       <div class="form-row">
       <div class="field" id="field-phone">
-        <label>Телефон WhatsApp <span class="tip">только цифры</span></label>
+        <label><span data-i18n="phoneWA">Телефон WhatsApp</span> <span class="tip" data-i18n="digitsOnly">только цифры</span></label>
         <input id="f-phone" type="tel" placeholder="77001234567" pattern="[0-9]{10,15}" inputmode="numeric" autocomplete="tel">
-        <span class="error-msg">Только цифры, 10-15 символов</span>
-        <span class="hint">Формат: 77001234567</span>
+        <span class="error-msg" data-i18n="errPhone">Только цифры, 10-15 символов</span>
+        <span class="hint" data-i18n="phoneFormat">Формат: 77001234567</span>
       </div>
       <div class="field">
-        <label>Имя родителя</label>
-        <input id="f-parent" placeholder="Гульнара апай" autocomplete="off">
+        <label data-i18n="parentName">Имя родителя</label>
+        <input id="f-parent" data-i18n-ph="phParentName" placeholder="Гульнара апай" autocomplete="off">
       </div>
       <div class="field" id="field-tg">
-        <label>Telegram chat_id <span class="tip">от /start</span></label>
+        <label>Telegram chat_id <span class="tip" data-i18n="fromStart">от /start</span></label>
         <input id="f-tg" placeholder="123456789" pattern="[0-9]+" inputmode="numeric">
-        <span class="error-msg">Только цифры</span>
+        <span class="error-msg" data-i18n="errDigits">Только цифры</span>
       </div>
       <div class="field" id="field-email">
-        <label>Email родителя</label>
+        <label data-i18n="parentEmail">Email родителя</label>
         <input id="f-email" type="email" placeholder="parent@mail.ru" autocomplete="email">
-        <span class="error-msg">Некорректный email</span>
-        <span class="hint">Для email-уведомлений</span>
+        <span class="error-msg" data-i18n="errEmail">Некорректный email</span>
+        <span class="hint" data-i18n="forEmailNotif">Для email-уведомлений</span>
       </div>
     </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap">
-      <button class="btn btn-primary" id="add-btn" onclick="addStudent()">Добавить ученика</button>
+      <button class="btn btn-primary" id="add-btn" onclick="addStudent()" data-i18n="addStudentBtn">Добавить ученика</button>
       <label class="btn btn-outline" style="cursor:pointer">
-        📥 Импорт CSV/Excel
+        📥 <span data-i18n="importCSV">Импорт CSV/Excel</span>
         <input type="file" accept=".csv,.xlsx" style="display:none" onchange="importStudents(this)">
       </label>
-      <button class="btn btn-outline" onclick="printConsentForm()">📝 Бланк согласия ПД</button>
+      <button class="btn btn-outline" onclick="printConsentForm()">📝 <span data-i18n="consentForm">Бланк согласия ПД</span></button>
       <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#666;cursor:pointer">
         <input type="checkbox" id="show-archived" onchange="loadStudents()">
-        Показать архивных
+        <span data-i18n="showArchived">Показать архивных</span>
       </label>
     </div>
   </div>
 
   <div class="no-print" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
     <div class="search-wrap">
-      <input type="text" id="student-search" placeholder="Поиск по имени..." oninput="_debounceSearch()" style="min-width:200px" aria-label="Поиск учеников по имени">
+      <input type="text" id="student-search" data-i18n-ph="phSearch" placeholder="Поиск по имени..." oninput="_debounceSearch()" style="min-width:200px" aria-label="Поиск учеников по имени">
     </div>
     <div class="chips" id="student-chips" style="margin:0"></div>
   </div>
@@ -400,12 +404,12 @@ td[title]{cursor:help}
 <!-- ══════════════════════════════ ГРУППЫ ══════════════════════════════ -->
 <div id="tab-groups" role="tabpanel" aria-label="Группы" style="display:none">
   <div class="card">
-    <h2 style="margin-bottom:16px">➕ Создать группу</h2>
+    <h2 style="margin-bottom:16px">➕ <span data-i18n="createGroup">Создать группу</span></h2>
     <div class="form-row">
-      <div class="field" style="flex:2"><label>Название</label><input id="g-name" placeholder="Робототехника (пн/ср)"></div>
-      <div class="field"><label>Начало занятия</label><input id="g-start" type="time" value="15:00"></div>
-      <div class="field"><label>Порог опоздания (мин)</label><input id="g-late" type="number" value="10" min="1" max="120"></div>
-      <button class="btn btn-primary" onclick="addGroup()">Создать</button>
+      <div class="field" style="flex:2"><label data-i18n="groupName">Название</label><input id="g-name" data-i18n-ph="phGroupName" placeholder="Робототехника (пн/ср)"></div>
+      <div class="field"><label data-i18n="lessonStart">Начало занятия</label><input id="g-start" type="time" value="15:00"></div>
+      <div class="field"><label data-i18n="lateThreshold">Порог опоздания (мин)</label><input id="g-late" type="number" value="10" min="1" max="120"></div>
+      <button class="btn btn-primary" onclick="addGroup()" data-i18n="createBtn">Создать</button>
     </div>
   </div>
   <div id="groups-list"></div>
@@ -416,9 +420,9 @@ td[title]{cursor:help}
   <div class="card no-print">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
       <div class="date-filter">
-        <label>С</label><input type="date" id="att-from" style="width:140px">
-        <label>По</label><input type="date" id="att-to" style="width:140px">
-        <button class="btn btn-outline btn-sm" onclick="loadAttendance()">Применить</button>
+        <label data-i18n="from">С</label><input type="date" id="att-from" style="width:140px">
+        <label data-i18n="to">По</label><input type="date" id="att-to" style="width:140px">
+        <button class="btn btn-outline btn-sm" onclick="loadAttendance()" data-i18n="apply">Применить</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-outline btn-sm" onclick="loadAttendance()" aria-label="Обновить">🔄</button>
@@ -431,11 +435,11 @@ td[title]{cursor:help}
     <table>
       <thead>
         <tr>
-          <th onclick="sortTable('att-body',0)">Ученик</th>
-          <th onclick="sortTable('att-body',1)">Группа</th>
-          <th onclick="sortTable('att-body',2)">Дата</th>
-          <th onclick="sortTable('att-body',3)">Время</th>
-          <th>Статус</th>
+          <th onclick="sortTable('att-body',0)" data-i18n="student">Ученик</th>
+          <th onclick="sortTable('att-body',1)" data-i18n="group">Группа</th>
+          <th onclick="sortTable('att-body',2)" data-i18n="date">Дата</th>
+          <th onclick="sortTable('att-body',3)" data-i18n="time">Время</th>
+          <th data-i18n="status">Статус</th>
         </tr>
       </thead>
       <tbody id="att-body"></tbody>
@@ -447,8 +451,8 @@ td[title]{cursor:help}
 <div id="tab-stats" role="tabpanel" aria-label="Статистика" style="display:none">
   <div class="card">
     <div class="form-row">
-      <div class="field" style="flex:2"><label>Ученик</label><select id="stats-student"></select></div>
-      <button class="btn btn-primary" onclick="loadStats()">Показать</button>
+      <div class="field" style="flex:2"><label data-i18n="student">Ученик</label><select id="stats-student"></select></div>
+      <button class="btn btn-primary" onclick="loadStats()" data-i18n="show">Показать</button>
     </div>
   </div>
   <div id="stats-result"></div>
@@ -460,7 +464,7 @@ td[title]{cursor:help}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
         <div style="font-size:20px;font-weight:800" id="wa-provider-name">WhatsApp</div>
-        <div style="font-size:12px;color:#aaa" id="wa-provider-desc">Провайдер WhatsApp уведомлений</div>
+        <div style="font-size:12px;color:#aaa" id="wa-provider-desc" data-i18n="waProviderDesc">Провайдер WhatsApp уведомлений</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="wa-dot2"></div>
@@ -487,25 +491,25 @@ td[title]{cursor:help}
     </div>
 
     <div class="wa-stat-row">
-      <div class="wa-stat"><div class="n" id="ws-sent">—</div><div class="l">Отправлено</div></div>
-      <div class="wa-stat"><div class="n" id="ws-fail">—</div><div class="l">Ошибки</div></div>
-      <div class="wa-stat"><div class="n" id="ws-queue">—</div><div class="l">В очереди</div></div>
+      <div class="wa-stat"><div class="n" id="ws-sent">—</div><div class="l" data-i18n="sent">Отправлено</div></div>
+      <div class="wa-stat"><div class="n" id="ws-fail">—</div><div class="l" data-i18n="errors">Ошибки</div></div>
+      <div class="wa-stat"><div class="n" id="ws-queue">—</div><div class="l" data-i18n="inQueue">В очереди</div></div>
     </div>
     <div class="test-block">
-      <h3>🧪 Тестовое сообщение</h3>
+      <h3>🧪 <span data-i18n="testMessage">Тестовое сообщение</span></h3>
       <div class="form-row">
-        <div class="field"><label>Номер телефона</label><input id="wa-test-phone" type="tel" placeholder="77001234567"></div>
-        <button class="btn btn-outline" onclick="sendTestWA()">Отправить тест</button>
+        <div class="field"><label data-i18n="phoneNumber">Номер телефона</label><input id="wa-test-phone" type="tel" placeholder="77001234567"></div>
+        <button class="btn btn-outline" onclick="sendTestWA()" data-i18n="sendTest">Отправить тест</button>
       </div>
     </div>
   </div>
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3>Лог сообщений</h3>
+      <h3 data-i18n="messageLog">Лог сообщений</h3>
       <button class="btn btn-outline btn-sm" onclick="loadWAStatus()" aria-label="Обновить">🔄</button>
     </div>
     <div class="table-wrap">
-      <table><thead><tr><th>Время</th><th>Статус</th><th>Ученик</th></tr></thead>
+      <table><thead><tr><th data-i18n="time">Время</th><th data-i18n="status">Статус</th><th data-i18n="student">Ученик</th></tr></thead>
       <tbody id="wa-log-body"></tbody></table>
     </div>
   </div>
@@ -517,7 +521,7 @@ td[title]{cursor:help}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
         <div style="font-size:20px;font-weight:800">Telegram Bot</div>
-        <div style="font-size:12px;color:#aaa">Второй канал уведомлений</div>
+        <div style="font-size:12px;color:#aaa" data-i18n="tgSecondChannel">Второй канал уведомлений</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="tg-dot"></div>
@@ -528,30 +532,30 @@ td[title]{cursor:help}
     <div id="tg-mode" style="font-size:13px;color:#2E5FA3;font-weight:600;margin-bottom:16px"></div>
 
     <div class="test-block">
-      <h3>🧪 Тестовое сообщение</h3>
+      <h3>🧪 <span data-i18n="testMessage">Тестовое сообщение</span></h3>
       <div class="form-row">
         <div class="field"><label>chat_id</label><input id="tg-test-id" placeholder="123456789"></div>
-        <button class="btn btn-outline" onclick="sendTestTG()">Отправить тест</button>
+        <button class="btn btn-outline" onclick="sendTestTG()" data-i18n="sendTest">Отправить тест</button>
       </div>
     </div>
   </div>
   <div class="card">
-    <h2 style="margin-bottom:16px">⚙️ Как подключить бота</h2>
+    <h2 style="margin-bottom:16px">⚙️ <span data-i18n="howToConnectBot">Как подключить бота</span></h2>
     <ol style="padding-left:20px;line-height:2.1;font-size:14px;color:#555">
-      <li>Напишите <b>@BotFather</b> → <code>/newbot</code> → дайте имя</li>
-      <li>Скопируйте токен в <code>.env</code> → <code>TELEGRAM_BOT_TOKEN=...</code></li>
-      <li>Перезапустите сервер. Webhook установится автоматически (на VPS/домене)</li>
+      <li data-i18n="tgStep1">Напишите <b>@BotFather</b> → <code>/newbot</code> → дайте имя</li>
+      <li data-i18n="tgStep2">Скопируйте токен в <code>.env</code> → <code>TELEGRAM_BOT_TOKEN=...</code></li>
+      <li data-i18n="tgStep3">Перезапустите сервер. Webhook установится автоматически (на VPS/домене)</li>
     </ol>
-    <div style="background:#e8f5e9;border-radius:10px;padding:14px;font-size:13px;color:#2e7d32;margin-top:16px">
+    <div style="background:#e8f5e9;border-radius:10px;padding:14px;font-size:13px;color:#2e7d32;margin-top:16px" data-i18n="tgAfterSetup">
       ✅ После настройки уведомления идут одновременно в WhatsApp и Telegram
     </div>
   </div>
   <div class="card">
-    <h2 style="margin-bottom:12px">👩‍👧 Как родителю подключить Telegram</h2>
+    <h2 style="margin-bottom:12px">👩‍👧 <span data-i18n="howParentTG">Как родителю подключить Telegram</span></h2>
     <ol style="padding-left:20px;line-height:2.1;font-size:14px;color:#555">
-      <li>Родитель находит бота и пишет <code>/start</code></li>
-      <li>Бот отвечает с chat_id</li>
-      <li>Педагог вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
+      <li data-i18n="tgParent1">Родитель находит бота и пишет <code>/start</code></li>
+      <li data-i18n="tgParent2">Бот отвечает с chat_id</li>
+      <li data-i18n="tgParent3">Педагог вводит chat_id в карточку ученика → кнопка «📨 TG»</li>
     </ol>
   </div>
 </div>
@@ -560,14 +564,14 @@ td[title]{cursor:help}
 <div id="tab-audit" role="tabpanel" aria-label="Аудит" style="display:none">
   <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center">
     <div>
-      <h2>🔍 Журнал действий</h2>
-      <p style="font-size:13px;color:#aaa;margin-top:4px">Все изменения данных фиксируются автоматически</p>
+      <h2>🔍 <span data-i18n="auditLog">Журнал действий</span></h2>
+      <p style="font-size:13px;color:#aaa;margin-top:4px" data-i18n="auditDesc">Все изменения данных фиксируются автоматически</p>
     </div>
     <button class="btn btn-outline btn-sm" onclick="loadAudit()" aria-label="Обновить">🔄</button>
   </div>
   <div class="table-wrap">
-    <table><thead><tr><th>Время</th><th>Действие</th><th>Объект</th><th>Детали</th><th>IP</th></tr></thead>
-    <tbody id="audit-body"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px">Загрузка...</td></tr></tbody></table>
+    <table><thead><tr><th data-i18n="time">Время</th><th data-i18n="action">Действие</th><th data-i18n="object">Объект</th><th data-i18n="details">Детали</th><th>IP</th></tr></thead>
+    <tbody id="audit-body"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px" data-i18n="loading">Загрузка...</td></tr></tbody></table>
   </div>
 </div>
 
@@ -578,7 +582,7 @@ td[title]{cursor:help}
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <div>
         <div style="font-size:20px;font-weight:800">SMTP Email</div>
-        <div style="font-size:12px;color:#aaa">Третий канал уведомлений для родителей 50+</div>
+        <div style="font-size:12px;color:#aaa" data-i18n="emailThirdChannel">Третий канал уведомлений для родителей 50+</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="dot" id="em-dot"></div>
@@ -588,16 +592,16 @@ td[title]{cursor:help}
     </div>
     <div id="em-detail" style="font-size:13px;color:#888;margin-bottom:16px"></div>
     <div class="test-block">
-      <h3>🧪 Тестовое письмо</h3>
+      <h3>🧪 <span data-i18n="testEmail">Тестовое письмо</span></h3>
       <div class="form-row">
-        <div class="field"><label>Email адрес</label><input id="em-test-addr" type="email" placeholder="test@mail.ru"></div>
-        <button class="btn btn-outline" onclick="sendTestEmail()">Отправить тест</button>
+        <div class="field"><label>Email</label><input id="em-test-addr" type="email" placeholder="test@mail.ru"></div>
+        <button class="btn btn-outline" onclick="sendTestEmail()" data-i18n="sendTest">Отправить тест</button>
       </div>
     </div>
   </div>
   <div class="card">
-    <h2 style="margin-bottom:16px">⚙️ Настройка SMTP</h2>
-    <p style="font-size:14px;color:#555;margin-bottom:16px">Добавьте в файл <code>.env</code>:</p>
+    <h2 style="margin-bottom:16px">⚙️ <span data-i18n="smtpSetup">Настройка SMTP</span></h2>
+    <p style="font-size:14px;color:#555;margin-bottom:16px" data-i18n="addToEnv">Добавьте в файл <code>.env</code>:</p>
     <div style="background:#1a1a2e;color:#a8ff78;border-radius:10px;padding:16px;font-family:monospace;font-size:13px;line-height:1.8;overflow-x:auto">
       SMTP_HOST=smtp.gmail.com<br>
       SMTP_PORT=465<br>
@@ -617,14 +621,14 @@ td[title]{cursor:help}
 <div id="tab-errors" role="tabpanel" aria-label="Ошибки" style="display:none">
   <div class="card no-print" style="display:flex;justify-content:space-between;align-items:center">
     <div>
-      <h2>⚠️ Журнал ошибок</h2>
-      <p style="font-size:13px;color:#aaa;margin-top:4px">Последние 50 ошибок сервера</p>
+      <h2>⚠️ <span data-i18n="errorLog">Журнал ошибок</span></h2>
+      <p style="font-size:13px;color:#aaa;margin-top:4px" data-i18n="last50errors">Последние 50 ошибок сервера</p>
     </div>
     <button class="btn btn-outline btn-sm" onclick="loadErrors()" aria-label="Обновить">🔄</button>
   </div>
   <div class="table-wrap">
-    <table><thead><tr><th>Время</th><th>Сообщение</th><th>URL</th><th>IP</th></tr></thead>
-    <tbody id="errors-body"><tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px">Загрузка...</td></tr></tbody></table>
+    <table><thead><tr><th data-i18n="time">Время</th><th data-i18n="message">Сообщение</th><th>URL</th><th>IP</th></tr></thead>
+    <tbody id="errors-body"><tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px" data-i18n="loading">Загрузка...</td></tr></tbody></table>
   </div>
 </div>
 
@@ -637,8 +641,8 @@ td[title]{cursor:help}
     <div class="confirm-title" id="confirm-title"></div>
     <div class="confirm-text" id="confirm-text"></div>
     <div class="modal-actions">
-      <button class="btn btn-danger" id="confirm-yes">Удалить</button>
-      <button class="btn btn-outline" id="confirm-no">Отмена</button>
+      <button class="btn btn-danger" id="confirm-yes" data-i18n="delete">Удалить</button>
+      <button class="btn btn-outline" id="confirm-no" data-i18n="cancel">Отмена</button>
     </div>
   </div>
 </div>
@@ -650,7 +654,7 @@ td[title]{cursor:help}
 <div class="modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-name">
   <div class="modal-box">
     <h2 id="qr-name"></h2>
-    <p style="color:#aaa;font-size:13px">Распечатайте и повесьте у входа в кабинет</p>
+    <p style="color:#aaa;font-size:13px" data-i18n="printAndHang">Распечатайте и повесьте у входа в кабинет</p>
     <img id="qr-img" src="" alt="QR">
     <p class="modal-url" id="qr-url"></p>
     <div class="modal-actions">
@@ -665,9 +669,9 @@ td[title]{cursor:help}
     <h2 id="sm-name" style="margin-bottom:16px;text-align:center"></h2>
     <div id="sm-content"></div>
     <div class="modal-actions" style="margin-top:16px">
-      <button class="btn btn-danger btn-sm" id="sm-gdpr-btn">🗑 Удалить все данные (GDPR)</button>
-      <button class="btn btn-warn btn-sm" id="sm-archive-btn">📦 Архивировать</button>
-      <button class="btn btn-outline btn-sm" onclick="closeModal('student-modal')">Закрыть</button>
+      <button class="btn btn-danger btn-sm" id="sm-gdpr-btn">🗑 <span data-i18n="gdprDelete">Удалить все данные (GDPR)</span></button>
+      <button class="btn btn-warn btn-sm" id="sm-archive-btn">📦 <span data-i18n="archive">Архивировать</span></button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('student-modal')" data-i18n="close">Закрыть</button>
     </div>
   </div>
 </div>
@@ -675,12 +679,12 @@ td[title]{cursor:help}
 <!-- Модалка рассылки -->
 <div class="modal" id="broadcast-modal" role="dialog" aria-modal="true" aria-label="Рассылка группе">
   <div class="modal-box" style="text-align:left">
-    <h2 style="margin-bottom:12px">📢 Рассылка группе</h2>
-    <p style="font-size:13px;color:#888;margin-bottom:14px">Сообщение придёт всем родителям группы <b id="bc-group-name"></b></p>
-    <textarea id="bc-message" rows="4" style="width:100%;resize:vertical;margin-bottom:14px" placeholder="Введите сообщение..."></textarea>
+    <h2 style="margin-bottom:12px">📢 <span data-i18n="broadcastGroup">Рассылка группе</span></h2>
+    <p style="font-size:13px;color:#888;margin-bottom:14px"><span data-i18n="broadcastDesc">Сообщение придёт всем родителям группы</span> <b id="bc-group-name"></b></p>
+    <textarea id="bc-message" rows="4" style="width:100%;resize:vertical;margin-bottom:14px" data-i18n-ph="phEnterMessage" placeholder="Введите сообщение..."></textarea>
     <div class="modal-actions">
-      <button class="btn btn-primary" id="bc-send-btn">📨 Отправить</button>
-      <button class="btn btn-outline" onclick="closeModal('broadcast-modal')">Отмена</button>
+      <button class="btn btn-primary" id="bc-send-btn">📨 <span data-i18n="send">Отправить</span></button>
+      <button class="btn btn-outline" onclick="closeModal('broadcast-modal')" data-i18n="cancel">Отмена</button>
     </div>
   </div>
 </div>
@@ -697,6 +701,307 @@ let _attSortCol    = -1;
 let _attSortAsc    = true;
 let _broadcastGrpId = null;
 let _searchTimer   = null;
+
+// ════════════════════════════════════════════════════════════════
+// ТЕМА (dark/light/auto)
+// ════════════════════════════════════════════════════════════════
+const _themeStates = ['auto','light','dark'];
+const _themeIcons  = {auto:'🌗', light:'☀️', dark:'🌙'};
+let _themeIdx = _themeStates.indexOf(localStorage.getItem('theme') || 'auto');
+if (_themeIdx < 0) _themeIdx = 0;
+
+function _applyTheme() {
+  const mode = _themeStates[_themeIdx];
+  localStorage.setItem('theme', mode);
+  const isDark = mode === 'dark' || (mode === 'auto' && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = _themeIcons[mode];
+}
+function toggleTheme() {
+  _themeIdx = (_themeIdx + 1) % 3;
+  _applyTheme();
+}
+_applyTheme();
+window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => {
+  if (_themeStates[_themeIdx] === 'auto') _applyTheme();
+});
+
+// ════════════════════════════════════════════════════════════════
+// i18n (RU / KK)
+// ════════════════════════════════════════════════════════════════
+let _lang = localStorage.getItem('lang') || 'ru';
+const _i18n = {
+  // ── Общие ──
+  appTitle:        { ru:'QR Посещаемость',    kk:'QR Қатысу' },
+  tabToday:        { ru:'Сегодня',            kk:'Бүгін' },
+  tabStudents:     { ru:'Ученики',            kk:'Оқушылар' },
+  tabGroups:       { ru:'Группы',             kk:'Топтар' },
+  tabJournal:      { ru:'Журнал',             kk:'Журнал' },
+  tabStats:        { ru:'Статистика',         kk:'Статистика' },
+  tabAudit:        { ru:'Аудит',              kk:'Аудит' },
+  tabErrors:       { ru:'Ошибки',             kk:'Қателер' },
+  loading:         { ru:'Загрузка...',        kk:'Жүктелуде...' },
+  close:           { ru:'Закрыть',            kk:'Жабу' },
+  cancel:          { ru:'Отмена',             kk:'Болдырмау' },
+  delete:          { ru:'Удалить',            kk:'Жою' },
+  send:            { ru:'Отправить',          kk:'Жіберу' },
+  apply:           { ru:'Применить',          kk:'Қолдану' },
+  show:            { ru:'Показать',           kk:'Көрсету' },
+  all:             { ru:'Все',                kk:'Барлығы' },
+  from:            { ru:'С',                  kk:'Бастап' },
+  to:              { ru:'По',                 kk:'Дейін' },
+  date:            { ru:'Дата',               kk:'Күн' },
+  time:            { ru:'Время',              kk:'Уақыт' },
+  status:          { ru:'Статус',             kk:'Мәртебе' },
+  action:          { ru:'Действие',           kk:'Әрекет' },
+  object:          { ru:'Объект',             kk:'Объект' },
+  details:         { ru:'Детали',             kk:'Мәліметтер' },
+  message:         { ru:'Сообщение',          kk:'Хабарлама' },
+  errors:          { ru:'Ошибки',             kk:'Қателер' },
+
+  // ── Дашборд ──
+  welcome:         { ru:'Добро пожаловать!',  kk:'Қош келдіңіз!' },
+  welcomeDesc:     { ru:'Система готова к работе. Выполните несколько шагов для начала:', kk:'Жүйе жұмысқа дайын. Бастау үшін бірнеше қадам орындаңыз:' },
+  startSetup:      { ru:'Начать настройку →', kk:'Баптауды бастау →' },
+  chart7days:      { ru:'Посещаемость за 7 дней', kk:'7 күндік қатысу' },
+  recentScans:     { ru:'Последние сканирования', kk:'Соңғы сканерлеулер' },
+  today:           { ru:'Сегодня',            kk:'Бүгін' },
+  students:        { ru:'Учеников',           kk:'Оқушылар' },
+  arrived:         { ru:'Пришли',             kk:'Келді' },
+  lateCount:       { ru:'Опозданий',          kk:'Кешігулер' },
+  groupsCount:     { ru:'Групп',              kk:'Топтар' },
+  noScansYet:      { ru:'Сканирований пока нет', kk:'Сканерлеулер әлі жоқ' },
+  onboardGroup:    { ru:'Создать группу (кружок/секцию)', kk:'Топ құру (үйірме/секция)' },
+  onboardStudents: { ru:'Добавить учеников',  kk:'Оқушыларды қосу' },
+  onboardWA:       { ru:'Подключить WhatsApp', kk:'WhatsApp қосу' },
+
+  // ── Ученики ──
+  student:         { ru:'Ученик',             kk:'Оқушы' },
+  group:           { ru:'Группа',             kk:'Топ' },
+  addStudent:      { ru:'Добавить ученика',   kk:'Оқушы қосу' },
+  addStudentBtn:   { ru:'Добавить ученика',   kk:'Оқушы қосу' },
+  sectionStudent:  { ru:'Ученик',             kk:'Оқушы' },
+  sectionParent:   { ru:'Контакты родителя',  kk:'Ата-ана байланысы' },
+  studentName:     { ru:'Имя ученика',        kk:'Оқушының аты' },
+  consentDate:     { ru:'Дата согласия ПД',   kk:'ДҚ келісім күні' },
+  gdprRequired:    { ru:'Обязательно для GDPR', kk:'GDPR үшін міндетті' },
+  phoneWA:         { ru:'Телефон WhatsApp',   kk:'WhatsApp телефоны' },
+  digitsOnly:      { ru:'только цифры',       kk:'тек сандар' },
+  phoneFormat:     { ru:'Формат: 77001234567', kk:'Формат: 77001234567' },
+  parentName:      { ru:'Имя родителя',       kk:'Ата-ана аты' },
+  parentEmail:     { ru:'Email родителя',     kk:'Ата-ана Email' },
+  fromStart:       { ru:'от /start',          kk:'/start арқылы' },
+  forEmailNotif:   { ru:'Для email-уведомлений', kk:'Email хабарламалар үшін' },
+  importCSV:       { ru:'Импорт CSV/Excel',   kk:'CSV/Excel импорт' },
+  consentForm:     { ru:'Бланк согласия ПД',  kk:'ДҚ келісім бланкі' },
+  showArchived:    { ru:'Показать архивных',   kk:'Мұрағатталғанды көрсету' },
+  noStudentsYet:   { ru:'Учеников пока нет',  kk:'Оқушылар әлі жоқ' },
+  addFirstStudent: { ru:'Добавьте первого ученика выше', kk:'Жоғарыда бірінші оқушыны қосыңыз' },
+  nothingFound:    { ru:'Ничего не найдено',  kk:'Ештеңе табылмады' },
+  noConsent:       { ru:'Нет согласия',       kk:'Келісім жоқ' },
+  consentOk:       { ru:'Согласие',           kk:'Келісім' },
+  archived:        { ru:'архив',              kk:'мұрағат' },
+  waNotSet:        { ru:'WhatsApp не указан', kk:'WhatsApp көрсетілмеген' },
+  tgNotSet:        { ru:'Telegram не подключён', kk:'Telegram қосылмаған' },
+  emailNotSet:     { ru:'Email не указан',    kk:'Email көрсетілмеген' },
+  parentPortal:    { ru:'Кабинет родителя',   kk:'Ата-ана кабинеті' },
+  gdprDelete:      { ru:'Удалить все данные (GDPR)', kk:'Барлық деректерді жою (GDPR)' },
+  archive:         { ru:'Архивировать',       kk:'Мұрағаттау' },
+
+  // ── Группы ──
+  createGroup:     { ru:'Создать группу',     kk:'Топ құру' },
+  createBtn:       { ru:'Создать',            kk:'Құру' },
+  groupName:       { ru:'Название',           kk:'Атауы' },
+  lessonStart:     { ru:'Начало занятия',     kk:'Сабақтың басталуы' },
+  lateThreshold:   { ru:'Порог опоздания (мин)', kk:'Кешігу шегі (мин)' },
+  noGroup:         { ru:'— без группы —',     kk:'— топсыз —' },
+  noGroupsYet:     { ru:'Групп пока нет',     kk:'Топтар әлі жоқ' },
+  createFirstGroup:{ ru:'Создайте первую группу выше', kk:'Жоғарыда бірінші топты құрыңыз' },
+  start:           { ru:'Начало',             kk:'Басталуы' },
+  threshold:       { ru:'Порог',              kk:'Шегі' },
+  qrGroup:         { ru:'QR группы',          kk:'Топтың QR' },
+  broadcast:       { ru:'Рассылка',           kk:'Тарату' },
+  copy:            { ru:'Копия',              kk:'Көшірме' },
+  groupCreated:    { ru:'Группа создана',     kk:'Топ құрылды' },
+  groupUpdated:    { ru:'Группа обновлена',   kk:'Топ жаңартылды' },
+  groupDeleted:    { ru:'Группа удалена',     kk:'Топ жойылды' },
+  groupCopied:     { ru:'Группа скопирована', kk:'Топ көшірілді' },
+  deleteGroupQ:    { ru:'Удалить группу',     kk:'Топты жою' },
+  studentsNotDeleted: { ru:'Ученики группы не будут удалены.', kk:'Топ оқушылары жойылмайды.' },
+  broadcastGroup:  { ru:'Рассылка группе',    kk:'Топқа тарату' },
+  broadcastDesc:   { ru:'Сообщение придёт всем родителям группы', kk:'Хабарлама топтың барлық ата-аналарына жіберіледі' },
+  printAndHang:    { ru:'Распечатайте и повесьте у входа в кабинет', kk:'Басып шығарып, кабинет кіреберісіне іліңіз' },
+
+  // ── Журнал ──
+  noRecords:       { ru:'Записей нет',        kk:'Жазбалар жоқ' },
+  onTime:          { ru:'Вовремя',            kk:'Уақытында' },
+  sick:            { ru:'Болен',              kk:'Науқас' },
+  validReason:     { ru:'Уваж. причина',      kk:'Дәлелді себеп' },
+
+  // ── Статистика ──
+  selectStudent:   { ru:'— выберите ученика —', kk:'— оқушыны таңдаңыз —' },
+  noDataYet:       { ru:'Данных пока нет',    kk:'Деректер әлі жоқ' },
+  total:           { ru:'Всего',              kk:'Барлығы' },
+  onTimeLabel:     { ru:'Вовремя',            kk:'Уақытында' },
+  lateLabel:       { ru:'Опозданий',          kk:'Кешігулер' },
+  accuracy:        { ru:'Точность',           kk:'Дәлдік' },
+  lessons:         { ru:'ЗАНЯТИЙ',            kk:'САБАҚТАР' },
+  onTimeUpper:     { ru:'ВОВРЕМЯ',            kk:'УАҚЫТЫНДА' },
+  lateUpper:       { ru:'ОПОЗДАНИЙ',          kk:'КЕШІГУ' },
+
+  // ── WhatsApp ──
+  waProviderDesc:  { ru:'Провайдер WhatsApp уведомлений', kk:'WhatsApp хабарлама провайдері' },
+  connected:       { ru:'Подключён',          kk:'Қосылған' },
+  needAuth:        { ru:'Нужна авторизация',  kk:'Авторизация қажет' },
+  errorLabel:      { ru:'Ошибка',             kk:'Қате' },
+  initializing:    { ru:'Инициализация...',   kk:'Іске қосылуда...' },
+  sent:            { ru:'Отправлено',         kk:'Жіберілді' },
+  inQueue:         { ru:'В очереди',          kk:'Кезекте' },
+  testMessage:     { ru:'Тестовое сообщение', kk:'Тест хабарлама' },
+  testEmail:       { ru:'Тестовое письмо',    kk:'Тест хат' },
+  phoneNumber:     { ru:'Номер телефона',     kk:'Телефон нөмірі' },
+  sendTest:        { ru:'Отправить тест',     kk:'Тест жіберу' },
+  messageLog:      { ru:'Лог сообщений',      kk:'Хабарлама журналы' },
+  noMessagesYet:   { ru:'Сообщений пока нет', kk:'Хабарламалар әлі жоқ' },
+  reconnect:       { ru:'Переподключить',     kk:'Қайта қосу' },
+  logoutWA:        { ru:'Выйти из WhatsApp',  kk:'WhatsApp-тан шығу' },
+
+  // ── Telegram ──
+  tgSecondChannel: { ru:'Второй канал уведомлений', kk:'Хабарлаудың екінші арнасы' },
+  tgNotConfigured: { ru:'Не настроен',        kk:'Бапталмаған' },
+  howToConnectBot: { ru:'Как подключить бота', kk:'Ботты қалай қосу' },
+  tgStep1:         { ru:'Напишите <b>@BotFather</b> → <code>/newbot</code> → дайте имя', kk:'<b>@BotFather</b> жазыңыз → <code>/newbot</code> → ат беріңіз' },
+  tgStep2:         { ru:'Скопируйте токен в <code>.env</code> → <code>TELEGRAM_BOT_TOKEN=...</code>', kk:'Токенді <code>.env</code> файлына көшіріңіз → <code>TELEGRAM_BOT_TOKEN=...</code>' },
+  tgStep3:         { ru:'Перезапустите сервер. Webhook установится автоматически (на VPS/домене)', kk:'Серверді қайта іске қосыңыз. Webhook автоматты орнатылады (VPS/доменде)' },
+  tgAfterSetup:    { ru:'✅ После настройки уведомления идут одновременно в WhatsApp и Telegram', kk:'✅ Баптаудан кейін хабарламалар WhatsApp пен Telegram-ға бір уақытта жіберіледі' },
+  howParentTG:     { ru:'Как родителю подключить Telegram', kk:'Ата-анаға Telegram-ды қосу' },
+  tgParent1:       { ru:'Родитель находит бота и пишет <code>/start</code>', kk:'Ата-ана ботты тауып <code>/start</code> жазады' },
+  tgParent2:       { ru:'Бот отвечает с chat_id', kk:'Бот chat_id жауап береді' },
+  tgParent3:       { ru:'Педагог вводит chat_id в карточку ученика → кнопка «📨 TG»', kk:'Педагог chat_id оқушы картасына енгізеді → «📨 TG» батырмасы' },
+  webhookMode:     { ru:'Режим: Webhook (рекомендуется)', kk:'Режим: Webhook (ұсынылады)' },
+  pollingMode:     { ru:'Режим: Long Polling (localhost)', kk:'Режим: Long Polling (localhost)' },
+
+  // ── Email ──
+  emailThirdChannel: { ru:'Третий канал уведомлений для родителей 50+', kk:'50+ ата-аналар үшін хабарлаудың үшінші арнасы' },
+  smtpSetup:       { ru:'Настройка SMTP',     kk:'SMTP баптау' },
+  addToEnv:        { ru:'Добавьте в файл <code>.env</code>:', kk:'<code>.env</code> файлына қосыңыз:' },
+
+  // ── Аудит ──
+  auditLog:        { ru:'Журнал действий',    kk:'Әрекеттер журналы' },
+  auditDesc:       { ru:'Все изменения данных фиксируются автоматически', kk:'Барлық деректер өзгерістері автоматты түрде тіркеледі' },
+  noActionsYet:    { ru:'Действий пока нет',  kk:'Әрекеттер әлі жоқ' },
+  auditCreate:     { ru:'Создание',           kk:'Құру' },
+  auditUpdate:     { ru:'Изменение',          kk:'Өзгерту' },
+  auditDelete:     { ru:'Удаление',           kk:'Жою' },
+  auditArchive:    { ru:'Архив',              kk:'Мұрағат' },
+  auditGdpr:       { ru:'GDPR удаление',     kk:'GDPR жою' },
+  auditScan:       { ru:'Скан',               kk:'Скан' },
+  auditScanPin:    { ru:'Скан (PIN)',         kk:'Скан (PIN)' },
+  auditManual:     { ru:'Ручная отметка',     kk:'Қолмен белгілеу' },
+  auditReminder:   { ru:'Напоминание',        kk:'Еске салу' },
+  auditTestWA:     { ru:'Тест WA',            kk:'WA тест' },
+  auditTestTG:     { ru:'Тест TG',            kk:'TG тест' },
+  auditBroadcast:  { ru:'Рассылка',           kk:'Тарату' },
+  auditImport:     { ru:'Импорт',             kk:'Импорт' },
+  auditCleanup:    { ru:'Очистка',            kk:'Тазалау' },
+  auditDuplicate:  { ru:'Копия',              kk:'Көшірме' },
+
+  // ── Ошибки ──
+  errorLog:        { ru:'Журнал ошибок',      kk:'Қателер журналы' },
+  last50errors:    { ru:'Последние 50 ошибок сервера', kk:'Сервердің соңғы 50 қатесі' },
+  noErrors:        { ru:'Ошибок нет',         kk:'Қателер жоқ' },
+
+  // ── Тосты ──
+  loadError:       { ru:'Ошибка загрузки',    kk:'Жүктеу қатесі' },
+  enterGroupName:  { ru:'Введите название группы', kk:'Топ атауын енгізіңіз' },
+  added:           { ru:'добавлен(а)',         kk:'қосылды' },
+  tgUpdated:       { ru:'Telegram обновлён',  kk:'Telegram жаңартылды' },
+  testSent:        { ru:'Тестовое сообщение отправлено', kk:'Тест хабарлама жіберілді' },
+  emailSent:       { ru:'Письмо отправлено',  kk:'Хат жіберілді' },
+  enterPhone:      { ru:'Введите номер телефона', kk:'Телефон нөмірін енгізіңіз' },
+  enterChatId:     { ru:'Введите chat_id',    kk:'chat_id енгізіңіз' },
+  enterEmail:      { ru:'Введите email',      kk:'Email енгізіңіз' },
+  enterMessage:    { ru:'Введите сообщение',  kk:'Хабарлама енгізіңіз' },
+  checkFields:     { ru:'Проверьте правильность заполнения полей', kk:'Өрістердің дұрыс толтырылғанын тексеріңіз' },
+  sessionExpired:  { ru:'Сессия истекла — обновите страницу', kk:'Сессия аяқталды — бетті жаңартыңыз' },
+  imported:        { ru:'Импортировано',       kk:'Импортталды' },
+  of:              { ru:'из',                  kk:'ішінен' },
+  notifSent:       { ru:'уведомлений',        kk:'хабарлама' },
+  sentCount:       { ru:'Отправлено',         kk:'Жіберілді' },
+  dataDeleted:     { ru:'полностью удалены (GDPR)', kk:'толығымен жойылды (GDPR)' },
+  archivedMsg:     { ru:'архивирован',        kk:'мұрағатталды' },
+  selectStudentErr:{ ru:'Выберите ученика',   kk:'Оқушыны таңдаңыз' },
+  adding:          { ru:'Добавляю...',        kk:'Қосылуда...' },
+
+  // ── Confirm dialogs ──
+  confirm:         { ru:'Подтвердите',        kk:'Растаңыз' },
+  confirmDeleteGroup: { ru:'Удалить группу',  kk:'Топты жою' },
+  fullDeletion:    { ru:'ПОЛНОЕ удаление данных', kk:'Деректерді ТОЛЫҚ жою' },
+  irreversible:    { ru:'Это действие необратимо', kk:'Бұл әрекет қайтымсыз' },
+  deleteForever:   { ru:'Удалить навсегда',   kk:'Мәңгілікке жою' },
+  archiveStudent:  { ru:'Архивировать ученика?', kk:'Оқушыны мұрағаттау?' },
+  movedToArchive:  { ru:'будет перемещён в архив. Данные сохранятся.', kk:'мұрағатқа жылжытылады. Деректер сақталады.' },
+  markStudent:     { ru:'Отметить',           kk:'Белгілеу' },
+  chooseReason:    { ru:'Выберите причину отсутствия', kk:'Болмау себебін таңдаңыз' },
+  sickBtn:         { ru:'🤒 Болен',            kk:'🤒 Науқас' },
+  validReasonBtn:  { ru:'📝 Уваж. причина',    kk:'📝 Дәлелді себеп' },
+  logoutWAConfirm: { ru:'Выйти из WhatsApp?', kk:'WhatsApp-тан шығу?' },
+  logoutWADesc:    { ru:'Потребуется повторная авторизация через QR-код.', kk:'QR-код арқылы қайта авторизация қажет болады.' },
+  logoutBtn:       { ru:'Выйти',              kk:'Шығу' },
+  reconnecting:    { ru:'Переподключение...',  kk:'Қайта қосылуда...' },
+  reconnectStarted:{ ru:'Переподключение запущено', kk:'Қайта қосылу басталды' },
+  loggedOutWA:     { ru:'Вышли из WhatsApp',  kk:'WhatsApp-тан шықтыңыз' },
+  noDataImport:    { ru:'Нет данных для импорта', kk:'Импорт үшін деректер жоқ' },
+
+  // ── Placeholders ──
+  phStudentName:   { ru:'Алия Иванова',       kk:'Алия Иванова' },
+  phParentName:    { ru:'Гульнара апай',      kk:'Гүлнар апай' },
+  phSearch:        { ru:'Поиск по имени...',  kk:'Аты бойынша іздеу...' },
+  phGroupName:     { ru:'Робототехника (пн/ср)', kk:'Робототехника (дс/ср)' },
+  phEnterMessage:  { ru:'Введите сообщение...', kk:'Хабарлама енгізіңіз...' },
+
+  // ── Ошибки формы ──
+  errStudentName:  { ru:'Введите имя ученика', kk:'Оқушы атын енгізіңіз' },
+  errPhone:        { ru:'Только цифры, 10-15 символов', kk:'Тек сандар, 10-15 таңба' },
+  errDigits:       { ru:'Только цифры',       kk:'Тек сандар' },
+  errEmail:        { ru:'Некорректный email',  kk:'Қате email' },
+
+  // ── Печать QR ──
+  printQR:         { ru:'Распечатать QR + PIN-коды', kk:'QR + PIN-кодтарды басып шығару' },
+  scanQRandPIN:    { ru:'Отсканируйте QR-код и введите свой PIN', kk:'QR-кодты сканерлеп, PIN-кодыңызды енгізіңіз' },
+  noStudentsInGroup: { ru:'Нет учеников',     kk:'Оқушылар жоқ' },
+};
+
+function t(key) { return (_i18n[key] && _i18n[key][_lang]) || (_i18n[key] && _i18n[key].ru) || key; }
+
+function _applyLang() {
+  localStorage.setItem('lang', _lang);
+  document.documentElement.lang = _lang === 'kk' ? 'kk' : 'ru';
+  document.getElementById('lang-ru').classList.toggle('active', _lang === 'ru');
+  document.getElementById('lang-kk').classList.toggle('active', _lang === 'kk');
+  // Update all data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (_i18n[key]) el.innerHTML = _i18n[key][_lang] || _i18n[key].ru;
+  });
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (_i18n[key]) el.placeholder = _i18n[key][_lang] || _i18n[key].ru;
+  });
+  // Update page title
+  document.title = t('appTitle') + (_lang === 'kk' ? ' — Педагог панелі' : ' — Панель педагога');
+}
+
+function setLang(lang) {
+  _lang = lang;
+  _applyLang();
+  // Reload current tab to re-render dynamic content
+  const activeTab = document.querySelector('.tab.active');
+  if (activeTab) activeTab.click();
+}
+_applyLang();
 
 // ════════════════════════════════════════════════════════════════
 // ВКЛАДКИ (a11y: keyboard nav)
@@ -809,7 +1114,7 @@ function toast(msg, type='ok', ms) {
 async function api(url, opts={}) {
   try {
     const r = await fetch(url, { headers:{'Content-Type':'application/json'}, ...opts });
-    if (r.status === 401) { toast('Сессия истекла — обновите страницу','err'); return { error:'Unauthorized' }; }
+    if (r.status === 401) { toast(t('sessionExpired'),'err'); return { error:'Unauthorized' }; }
     const data = await r.json();
     if (!r.ok && !data.error) data.error = `Ошибка ${r.status}`;
     return data;
@@ -861,15 +1166,15 @@ document.addEventListener('input', e => {
 // ════════════════════════════════════════════════════════════════
 async function loadDashboard() {
   const d = await api('/api/dashboard');
-  if (d.error) { toast('Ошибка загрузки: '+d.error,'err'); return; }
+  if (d.error) { toast(t('loadError')+': '+d.error,'err'); return; }
   const s = d.summary || {};
   const waOk = d.wa?.state === 'authorized';
 
   // Онбординг
   const steps = [
-    { done: d.groups > 0,   icon:'📚', text:'Создать группу (кружок/секцию)' },
-    { done: d.students > 0, icon:'👥', text:'Добавить учеников' },
-    { done: waOk,           icon:'📱', text:'Подключить WhatsApp' },
+    { done: d.groups > 0,   icon:'📚', text: t('onboardGroup') },
+    { done: d.students > 0, icon:'👥', text: t('onboardStudents') },
+    { done: waOk,           icon:'📱', text: t('onboardWA') },
   ];
   const onboard = document.getElementById('dash-onboard');
   const allDone = steps.every(s => s.done);
@@ -905,11 +1210,11 @@ async function loadDashboard() {
   }
 
   document.getElementById('dash-cards').innerHTML = [
-    { icon:'📅', num: s.today||'—', lbl:'Сегодня', cls:'' },
-    { icon:'👥', num: s.total||0,   lbl:'Учеников', cls:'' },
-    { icon:'✅', num: s.present||0, lbl:'Пришли', cls:'dash-ok' },
-    { icon:'⚠️', num: s.late||0,    lbl:'Опозданий', cls: s.late ? 'dash-warn' : '' },
-    { icon:'📚', num: d.groups||0,  lbl:'Групп', cls:'' },
+    { icon:'📅', num: s.today||'—', lbl: t('today'), cls:'' },
+    { icon:'👥', num: s.total||0,   lbl: t('students'), cls:'' },
+    { icon:'✅', num: s.present||0, lbl: t('arrived'), cls:'dash-ok' },
+    { icon:'⚠️', num: s.late||0,    lbl: t('lateCount'), cls: s.late ? 'dash-warn' : '' },
+    { icon:'📚', num: d.groups||0,  lbl: t('groupsCount'), cls:'' },
     { icon:'📧', num: d.email?.ready ? '✅' : '—', lbl:'Email', cls:'' },
   ].map(c => `<div class="dash-card ${c.cls}">
     <div class="dash-icon">${c.icon}</div>
@@ -921,7 +1226,7 @@ async function loadDashboard() {
   const recs = await api('/api/attendance');
   const tbody = document.getElementById('dash-recent');
   const show = (Array.isArray(recs) ? recs : []).slice(0,10);
-  if (!show.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px">Сканирований пока нет</td></tr>'; return; }
+  if (!show.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#aaa;padding:24px">'+t('noScansYet')+'</td></tr>'; return; }
   tbody.innerHTML = show.map(r => {
     const t = new Date(r.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
     const status = r.isLate
@@ -941,8 +1246,8 @@ async function loadGroups() {
   if (!_groups.length) {
     el.innerHTML = `<div class="card" style="text-align:center;color:#aaa;padding:40px">
       <div style="font-size:48px;margin-bottom:12px">🏫</div>
-      <p>Групп пока нет</p>
-      <p style="font-size:13px;margin-top:8px">Создайте первую группу выше</p>
+      <p>${t('noGroupsYet')}</p>
+      <p style="font-size:13px;margin-top:8px">${t('createFirstGroup')}</p>
     </div>`;
     return;
   }
@@ -952,16 +1257,16 @@ async function loadGroups() {
         <div>
           <div style="font-size:18px;font-weight:800">${esc(g.name)}</div>
           <div style="font-size:13px;color:#888;margin-top:4px">
-            ⏰ Начало: <b>${g.lessonStartTime||'—'}</b> &nbsp;·&nbsp;
-            Порог: <b>${g.lateMinutes} мин</b>
+            ⏰ ${t('start')}: <b>${g.lessonStartTime||'—'}</b> &nbsp;·&nbsp;
+            ${t('threshold')}: <b>${g.lateMinutes} ${_lang==='kk'?'мин':'мин'}</b>
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 QR группы</button>
-          <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${jesc(g.name)}')">📢 Рассылка</button>
-          <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 Копия</button>
+          <button class="btn btn-outline btn-sm" onclick="showGroupQR('${g.id}')">📱 ${t('qrGroup')}</button>
+          <button class="btn btn-outline btn-sm" onclick="broadcastGroup('${g.id}','${jesc(g.name)}')">📢 ${t('broadcast')}</button>
+          <button class="btn btn-outline btn-sm" onclick="duplicateGroup('${g.id}')">📋 ${t('copy')}</button>
           <button class="btn btn-outline btn-sm" onclick="editGroup('${g.id}','${jesc(g.name)}','${g.lessonStartTime||''}',${g.lateMinutes})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}','${jesc(g.name)}')">Удалить</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteGroup('${g.id}','${jesc(g.name)}')">${t('delete')}</button>
         </div>
       </div>
     </div>`).join('');
@@ -970,14 +1275,14 @@ async function loadGroups() {
 
 async function addGroup() {
   const name = document.getElementById('g-name').value.trim();
-  if (!name) { toast('Введите название группы','err'); return; }
+  if (!name) { toast(t('enterGroupName'),'err'); return; }
   const r = await api('/api/groups',{method:'POST',body:JSON.stringify({
     name, lessonStartTime: document.getElementById('g-start').value,
     lateMinutes: Number(document.getElementById('g-late').value)||10,
   })});
   if (r.error) { toast(r.error,'err'); return; }
   document.getElementById('g-name').value='';
-  toast('Группа создана ✅');
+  toast(t('groupCreated')+' ✅');
   await loadGroups();
 }
 async function editGroup(id,name,start,late) {
@@ -985,19 +1290,19 @@ async function editGroup(id,name,start,late) {
   const newStart=prompt('Начало занятия (15:00):',start);
   const newLate=prompt('Порог опоздания (мин):',late);
   await api(`/api/groups/${id}`,{method:'PUT',body:JSON.stringify({name:newName,lessonStartTime:newStart||'',lateMinutes:Number(newLate)||10})});
-  toast('Группа обновлена ✅');
+  toast(t('groupUpdated')+' ✅');
   loadGroups();
 }
 async function deleteGroup(id,name) {
-  const ok = await confirmDialog({icon:'🗑', title:`Удалить группу «${name}»?`, text:'Ученики группы не будут удалены.', yesLabel:'Удалить', yesClass:'btn-danger'});
+  const ok = await confirmDialog({icon:'🗑', title:`${t('deleteGroupQ')} «${name}»?`, text:t('studentsNotDeleted'), yesLabel:t('delete'), yesClass:'btn-danger'});
   if (!ok) return;
   await api(`/api/groups/${id}`,{method:'DELETE'});
-  toast('Группа удалена');
+  toast(t('groupDeleted'));
   loadGroups();
 }
 async function duplicateGroup(id) {
   const g = await api(`/api/groups/${id}/duplicate`,{method:'POST',body:'{}'});
-  toast(`Группа скопирована: ${g.name} ✅`);
+  toast(`${t('groupCopied')}: ${g.name} ✅`);
   loadGroups();
 }
 
@@ -1010,10 +1315,10 @@ function broadcastGroup(id, name) {
 }
 async function sendBroadcast() {
   const msg = document.getElementById('bc-message').value.trim();
-  if (!msg) { toast('Введите сообщение','err'); return; }
+  if (!msg) { toast(t('enterMessage'),'err'); return; }
   const r = await api(`/api/groups/${_broadcastGrpId}/broadcast`,{method:'POST',body:JSON.stringify({message:msg})});
   closeModal('broadcast-modal');
-  toast(`Отправлено: ${r.sent} уведомлений ✅`);
+  toast(`${t('sentCount')}: ${r.sent} ${t('notifSent')} ✅`);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1035,8 +1340,8 @@ async function loadStudents(groupId) {
   if (!Array.isArray(students)||!students.length) {
     el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:#aaa">
       <div style="font-size:48px;margin-bottom:12px">👥</div>
-      <p style="font-size:16px">${search ? 'Ничего не найдено' : 'Учеников пока нет'}</p>
-      ${!search ? '<p style="font-size:13px;margin-top:8px">Добавьте первого ученика выше</p>' : ''}
+      <p style="font-size:16px">${search ? t('nothingFound') : t('noStudentsYet')}</p>
+      ${!search ? '<p style="font-size:13px;margin-top:8px">'+t('addFirstStudent')+'</p>' : ''}
     </div>`;
     return;
   }
@@ -1045,13 +1350,13 @@ async function loadStudents(groupId) {
     const group = _groups.find(g => g.id === s.groupId);
     const hasConsent = !!s.consentDate;
     return `<div class="student-card ${!hasConsent?'no-consent':''}" style="${!s.isActive?'opacity:.55':''}">
-      <span class="consent-badge ${hasConsent?'consent-ok':'consent-no'}">${hasConsent?'✅ Согласие':'⚠️ Нет согласия'}</span>
+      <span class="consent-badge ${hasConsent?'consent-ok':'consent-no'}">${hasConsent?'✅ '+t('consentOk'):'⚠️ '+t('noConsent')}</span>
       <div class="avatar">${(s.name||'?')[0].toUpperCase()}</div>
-      <h3>${esc(s.name)}${!s.isActive?' <span style="font-size:11px;color:#aaa">(архив)</span>':''}</h3>
+      <h3>${esc(s.name)}${!s.isActive?' <span style="font-size:11px;color:#aaa">('+t('archived')+')</span>':''}</h3>
       <div class="meta">
-        ${s.parentPhone ? '📱 '+s.parentPhone : '<span style="color:#ddd">WhatsApp не указан</span>'}<br>
-        ${s.telegramChatId ? '📨 TG: '+s.telegramChatId : '<span style="color:#ddd">Telegram не подключён</span>'}<br>
-        ${s.parentEmail ? '📧 '+s.parentEmail : '<span style="color:#ddd">Email не указан</span>'}<br>
+        ${s.parentPhone ? '📱 '+s.parentPhone : '<span style="color:#ddd">'+t('waNotSet')+'</span>'}<br>
+        ${s.telegramChatId ? '📨 TG: '+s.telegramChatId : '<span style="color:#ddd">'+t('tgNotSet')+'</span>'}<br>
+        ${s.parentEmail ? '📧 '+s.parentEmail : '<span style="color:#ddd">'+t('emailNotSet')+'</span>'}<br>
         👤 ${esc(s.parentName)}
         ${group ? '<br>🏫 '+esc(group.name) : ''}
         ${s.pin ? '<br>🔑 PIN: <b style="font-size:16px;letter-spacing:2px;color:#2E5FA3">'+s.pin+'</b>' : ''}
@@ -1067,17 +1372,17 @@ async function loadStudents(groupId) {
         <button class="btn btn-outline btn-sm" onclick="manualMark('${s.id}','${esc(s.name)}')">✏️</button>
         <button class="btn btn-outline btn-sm" onclick="openStudentModal('${s.id}')">⋯</button>
       </div>
-      ${s.parentUrl ? '<div style="margin-top:8px"><a href="'+s.parentUrl+'" target="_blank" style="font-size:11px;color:#888">👨‍👩‍👧 Кабинет родителя ↗</a></div>' : ''}
+      ${s.parentUrl ? '<div style="margin-top:8px"><a href="'+s.parentUrl+'" target="_blank" style="font-size:11px;color:#888">👨‍👩‍👧 '+t('parentPortal')+' ↗</a></div>' : ''}
       </div>
     </div>`;
   }).join('');
 }
 
 async function addStudent() {
-  if (!_validateStudentForm()) { toast('Проверьте правильность заполнения полей','err'); return; }
+  if (!_validateStudentForm()) { toast(t('checkFields'),'err'); return; }
   const name = document.getElementById('f-name').value.trim();
   const btn = document.getElementById('add-btn');
-  btn.disabled = true; btn.textContent = 'Добавляю...';
+  btn.disabled = true; btn.textContent = t('adding');
   try {
     const s = await api('/api/students',{method:'POST',body:JSON.stringify({
       name,
@@ -1091,10 +1396,10 @@ async function addStudent() {
     if (s.error) { toast('Ошибка: '+s.error,'err'); return; }
     ['f-name','f-phone','f-parent','f-email','f-tg','f-consent'].forEach(id => document.getElementById(id).value='');
     document.getElementById('f-group').value='';
-    toast(`${s.name} добавлен(а) ✅ PIN: ${s.pin}`);
+    toast(`${s.name} ${t('added')} ✅ PIN: ${s.pin}`);
     loadStudents();
   } finally {
-    btn.disabled = false; btn.textContent = 'Добавить ученика';
+    btn.disabled = false; btn.textContent = t('addStudentBtn');
   }
 }
 
@@ -1102,12 +1407,12 @@ async function editTG(id, current) {
   const val = prompt('Telegram chat_id (родитель пишет /start боту):', current);
   if (val === null) return;
   await api(`/api/students/${id}`,{method:'PUT',body:JSON.stringify({telegramChatId:val.trim()})});
-  toast('Telegram обновлён ✅');
+  toast(t('tgUpdated')+' ✅');
   loadStudents();
 }
 
 async function manualMark(id, name) {
-  const isSick = await confirmDialog({icon:'📝', title:`Отметить ${name}`, text:'Выберите причину отсутствия', yesLabel:'🤒 Болен', yesClass:'btn-warn', noLabel:'📝 Уваж. причина'});
+  const isSick = await confirmDialog({icon:'📝', title:`${t('markStudent')} ${name}`, text:t('chooseReason'), yesLabel:t('sickBtn'), yesClass:'btn-warn', noLabel:t('validReasonBtn')});
   const reason = isSick ? 'sick' : 'valid';
   await api(`/api/students/${id}/manual`,{method:'POST',body:JSON.stringify({reason})});
   toast(`${name} отмечен(а): ${reason==='sick'?'🤒 Болен':'📝 Уваж. причина'}`);
@@ -1128,9 +1433,9 @@ async function openStudentModal(id) {
   const late   = stats.reduce((a,s)=>a+s.late,0);
   document.getElementById('sm-content').innerHTML = `
     <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px">
-      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#2E5FA3">${total}</div><div style="font-size:11px;color:#aaa">ЗАНЯТИЙ</div></div>
-      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#27ae60">${total-late}</div><div style="font-size:11px;color:#aaa">ВОВРЕМЯ</div></div>
-      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#e53935">${late}</div><div style="font-size:11px;color:#aaa">ОПОЗДАНИЙ</div></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#2E5FA3">${total}</div><div style="font-size:11px;color:#aaa">${t('lessons')}</div></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#27ae60">${total-late}</div><div style="font-size:11px;color:#aaa">${t('onTimeUpper')}</div></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:800;color:#e53935">${late}</div><div style="font-size:11px;color:#aaa">${t('lateUpper')}</div></div>
     </div>
     <div style="font-size:12px;color:#888">
       📱 ${st.parentPhone||'нет'}<br>
@@ -1140,18 +1445,18 @@ async function openStudentModal(id) {
 
   document.getElementById('sm-gdpr-btn').onclick = async () => {
     closeModal('student-modal');
-    const ok = await confirmDialog({icon:'⚠️', title:'ПОЛНОЕ удаление данных', text:`Вы удаляете все данные <b>${esc(st.name)}</b>.<br>Это действие <b>необратимо</b>. Вся история посещаемости, телефон и Telegram будут удалены.`, yesLabel:'Удалить навсегда', yesClass:'btn-danger'});
+    const ok = await confirmDialog({icon:'⚠️', title:t('fullDeletion'), text:`${esc(st.name)}.<br>${t('irreversible')}.`, yesLabel:t('deleteForever'), yesClass:'btn-danger'});
     if (!ok) return;
     await api(`/api/students/${id}/gdpr`,{method:'DELETE'});
-    toast(`Данные ${st.name} полностью удалены (GDPR)`);
+    toast(`${st.name} — ${t('dataDeleted')}`);
     loadStudents();
   };
   document.getElementById('sm-archive-btn').onclick = async () => {
     closeModal('student-modal');
-    const ok = await confirmDialog({icon:'📦', title:'Архивировать ученика?', text:`<b>${esc(st.name)}</b> будет перемещён в архив. Данные сохранятся.`, yesLabel:'Архивировать', yesClass:'btn-warn'});
+    const ok = await confirmDialog({icon:'📦', title:t('archiveStudent'), text:`<b>${esc(st.name)}</b> ${t('movedToArchive')}`, yesLabel:t('archive'), yesClass:'btn-warn'});
     if (!ok) return;
     await api(`/api/students/${id}/archive`,{method:'POST',body:'{}'});
-    toast(`${st.name} архивирован`);
+    toast(`${st.name} ${t('archivedMsg')}`);
     loadStudents();
   };
 }
@@ -1167,11 +1472,11 @@ async function importStudents(input) {
     const cols = line.split(',').map(c=>c.replace(/^"|"$/g,'').trim());
     if (cols[0]) students.push({ name:cols[0], parentPhone:cols[1]||'', parentName:cols[2]||'Родитель', telegramChatId:cols[3]||'' });
   }
-  if (!students.length) { toast('Нет данных для импорта','err'); return; }
+  if (!students.length) { toast(t('noDataImport'),'err'); return; }
   const groupId = document.getElementById('f-group').value;
   const res = await api('/api/students/import',{method:'POST',body:JSON.stringify({students, groupId})});
   const ok = (res||[]).filter(r=>r.ok).length;
-  toast(`Импортировано: ${ok} из ${students.length} ✅`);
+  toast(`${t('imported')}: ${ok} ${t('of')} ${students.length} ✅`);
   loadStudents();
   input.value='';
 }
@@ -1196,16 +1501,16 @@ async function loadAttendance(groupId) {
   const rows = await api(url);
   const body = document.getElementById('att-body');
   if (!Array.isArray(rows)||!rows.length) {
-    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#666;padding:32px">Записей нет</td></tr>'; return;
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#666;padding:32px">'+t('noRecords')+'</td></tr>'; return;
   }
   body.innerHTML = rows.map(r => {
     const d   = new Date(r.time);
     const dt  = d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
     const tm  = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
-    const st  = r.reason==='sick' ? `<span class="badge b-sick">🤒 Болен</span>`
-               : r.reason==='valid' ? `<span class="badge b-valid">📝 Уваж. причина</span>`
-               : r.isLate ? `<span class="badge b-late">⚠️ +${r.minutesLate}мин</span>`
-               : `<span class="badge b-ok">✅ Вовремя</span>`;
+    const st  = r.reason==='sick' ? `<span class="badge b-sick">🤒 ${t('sick')}</span>`
+               : r.reason==='valid' ? `<span class="badge b-valid">📝 ${t('validReason')}</span>`
+               : r.isLate ? `<span class="badge b-late">⚠️ +${r.minutesLate}${_lang==='kk'?'мин':'мин'}</span>`
+               : `<span class="badge b-ok">✅ ${t('onTime')}</span>`;
     return `<tr><td>${esc(r.studentName)}</td><td>${esc(r.groupName||'—')}</td><td>${dt}</td><td>${tm}</td><td>${st}</td></tr>`;
   }).join('');
 }
@@ -1246,27 +1551,27 @@ function sortTable(tbodyId, colIdx) {
 async function initStats() {
   const students = await api('/api/students');
   const sel = document.getElementById('stats-student');
-  sel.innerHTML = '<option value="">— выберите ученика —</option>' +
+  sel.innerHTML = '<option value="">'+t('selectStudent')+'</option>' +
     (students||[]).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
 }
 
 async function loadStats() {
   const id = document.getElementById('stats-student').value;
-  if (!id) { toast('Выберите ученика','err'); return; }
+  if (!id) { toast(t('selectStudentErr'),'err'); return; }
   const stats = await api(`/api/students/${id}/stats`);
   const el = document.getElementById('stats-result');
   if (!Array.isArray(stats)||!stats.length) {
-    el.innerHTML='<div class="card" style="text-align:center;color:#aaa;padding:40px">Данных пока нет</div>'; return;
+    el.innerHTML='<div class="card" style="text-align:center;color:#aaa;padding:40px">'+t('noDataYet')+'</div>'; return;
   }
   const total = stats.reduce((a,s)=>a+s.total,0);
   const late  = stats.reduce((a,s)=>a+s.late,0);
   el.innerHTML=`
     <div class="card" style="margin-bottom:16px">
       <div class="stat-summary">
-        <div class="s"><div class="sn" style="color:#2E5FA3">${total}</div><div class="sl">Всего</div></div>
-        <div class="s"><div class="sn" style="color:#27ae60">${total-late}</div><div class="sl">Вовремя</div></div>
-        <div class="s"><div class="sn" style="color:#e53935">${late}</div><div class="sl">Опозданий</div></div>
-        <div class="s"><div class="sn" style="color:#f39c12">${total?Math.round((1-late/total)*100):0}%</div><div class="sl">Точность</div></div>
+        <div class="s"><div class="sn" style="color:#2E5FA3">${total}</div><div class="sl">${t('total')}</div></div>
+        <div class="s"><div class="sn" style="color:#27ae60">${total-late}</div><div class="sl">${t('onTimeLabel')}</div></div>
+        <div class="s"><div class="sn" style="color:#e53935">${late}</div><div class="sl">${t('lateLabel')}</div></div>
+        <div class="s"><div class="sn" style="color:#f39c12">${total?Math.round((1-late/total)*100):0}%</div><div class="sl">${t('accuracy')}</div></div>
       </div>
     </div>
     <div class="stats-grid">${stats.map(s=>`
@@ -1302,11 +1607,11 @@ async function showGroupQR(groupId) {
   }
   extra.innerHTML = `<div style="margin-top:16px;max-height:300px;overflow-y:auto;text-align:left">
     <table style="width:100%;border-collapse:collapse"><thead><tr>
-      <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">Ученик</th>
+      <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">${t('student')}</th>
       <th style="padding:4px 12px;text-align:left;border-bottom:2px solid #e0e0e0">PIN</th>
-    </tr></thead><tbody>${pins || '<tr><td colspan="2" style="color:#aaa;padding:12px">Нет учеников</td></tr>'}</tbody></table>
+    </tr></thead><tbody>${pins || '<tr><td colspan="2" style="color:#aaa;padding:12px">'+t('noStudentsInGroup')+'</td></tr>'}</tbody></table>
   </div>
-  <button class="btn btn-primary" onclick="printGroupQR()" style="margin-top:12px;width:100%">🖨 Распечатать QR + PIN-коды</button>`;
+  <button class="btn btn-primary" onclick="printGroupQR()" style="margin-top:12px;width:100%">🖨 ${t('printQR')}</button>`;
 }
 
 function printGroupQR() {
@@ -1417,11 +1722,11 @@ async function loadWAStatus() {
   if (pDesc) pDesc.textContent = isBaileys ? 'Прямое подключение через QR-код' : 'Провайдер WhatsApp уведомлений';
 
   const states = {
-    authorized:    { cls:'ready', label:'Подключён ✅' },
-    notAuthorized: { cls:'warn',  label:'Нужна авторизация ⚠️' },
-    error:         { cls:'err',   label:'Ошибка ❌' },
+    authorized:    { cls:'ready', label:t('connected')+' ✅' },
+    notAuthorized: { cls:'warn',  label:t('needAuth')+' ⚠️' },
+    error:         { cls:'err',   label:t('errorLabel')+' ❌' },
   };
-  const { cls='', label='Инициализация...' } = states[r.state] || {};
+  const { cls='', label=t('initializing') } = states[r.state] || {};
   ['wa-dot','wa-dot2'].forEach(id => { const d=document.getElementById(id); if(d) d.className='dot '+cls; });
   document.getElementById('wa-text').textContent = 'WA: '+label;
   const sl = document.getElementById('wa-status-label');
@@ -1474,12 +1779,12 @@ async function loadWAStatus() {
   const meta = { sent:{cls:'b-ok',lbl:'✅ Отправлено'}, queued:{cls:'b-q',lbl:'⏳ В очереди'}, retry:{cls:'b-warn',lbl:'🔄 Повтор'}, failed:{cls:'b-err',lbl:'❌ Ошибка'} };
   body.innerHTML = (logs||[]).length ? (logs||[]).map(l=>{
     const m=meta[l.status]||{cls:'',lbl:l.status};
-    const t=new Date(l.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    const tm=new Date(l.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
     return `<tr class="${l.status==='sent'?'log-sent':l.status==='failed'?'log-err':'log-q'}">
-      <td style="color:#888;font-size:12px">${t}</td>
+      <td style="color:#888;font-size:12px">${tm}</td>
       <td><span class="badge ${m.cls}">${m.lbl}</span></td>
       <td style="font-size:12px">${esc(l.note||'')}</td></tr>`;
-  }).join('') : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">Сообщений пока нет</td></tr>';
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:20px">'+t('noMessagesYet')+'</td></tr>';
 }
 
 function _startQrPolling() {
@@ -1506,25 +1811,25 @@ async function _loadQr() {
 }
 
 async function waLogout() {
-  const ok = await confirmDialog({icon:'🚪', title:'Выйти из WhatsApp?', text:'Потребуется повторная авторизация через QR-код.', yesLabel:'Выйти', yesClass:'btn-danger'});
+  const ok = await confirmDialog({icon:'🚪', title:t('logoutWAConfirm'), text:t('logoutWADesc'), yesLabel:t('logoutBtn'), yesClass:'btn-danger'});
   if (!ok) return;
   const r = await api('/api/whatsapp/logout', {method:'POST'});
-  r.error ? toast('Ошибка: '+r.error,'err') : toast('Вышли из WhatsApp');
+  r.error ? toast(t('errorLabel')+': '+r.error,'err') : toast(t('loggedOutWA'));
   loadWAStatus();
 }
 
 async function waRestart() {
-  toast('Переподключение...');
+  toast(t('reconnecting'));
   const r = await api('/api/whatsapp/restart', {method:'POST'});
-  r.error ? toast('Ошибка: '+r.error,'err') : toast('Переподключение запущено');
+  r.error ? toast(t('errorLabel')+': '+r.error,'err') : toast(t('reconnectStarted'));
   setTimeout(loadWAStatus, 3000);
 }
 
 async function sendTestWA() {
   const phone = document.getElementById('wa-test-phone').value.trim();
-  if (!phone) { toast('Введите номер телефона','err'); return; }
+  if (!phone) { toast(t('enterPhone'),'err'); return; }
   const r = await api('/api/whatsapp/test',{method:'POST',body:JSON.stringify({phone})});
-  r.error ? toast('Ошибка: '+r.error,'err') : toast('Тестовое сообщение отправлено ✅');
+  r.error ? toast(t('errorLabel')+': '+r.error,'err') : toast(t('testSent')+' ✅');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1536,18 +1841,18 @@ async function loadTGStatus() {
   const mode=document.getElementById('tg-mode');
   if (r.enabled && r.ready) {
     dot.className='dot ready'; lbl.textContent=`@${r.botName} ✅`;
-    mode.textContent = r.mode==='webhook' ? '⚡ Режим: Webhook (рекомендуется)' : '🔄 Режим: Long Polling (localhost)';
+    mode.textContent = r.mode==='webhook' ? '⚡ '+t('webhookMode') : '🔄 '+t('pollingMode');
   } else {
-    dot.className='dot err'; lbl.textContent='Не настроен ❌';
-    mode.textContent = r.reason || 'Укажите TELEGRAM_BOT_TOKEN в .env';
+    dot.className='dot err'; lbl.textContent=t('tgNotConfigured')+' ❌';
+    mode.textContent = r.reason || 'TELEGRAM_BOT_TOKEN → .env';
   }
 }
 
 async function sendTestTG() {
   const chatId = document.getElementById('tg-test-id').value.trim();
-  if (!chatId) { toast('Введите chat_id','err'); return; }
+  if (!chatId) { toast(t('enterChatId'),'err'); return; }
   const r = await api('/api/telegram/test',{method:'POST',body:JSON.stringify({chatId})});
-  r.error ? toast('Ошибка: '+r.error,'err') : toast('Тестовое сообщение отправлено ✅');
+  r.error ? toast(t('errorLabel')+': '+r.error,'err') : toast(t('testSent')+' ✅');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1558,16 +1863,16 @@ async function loadAudit() {
   const rows = await api('/api/audit');
   const body = document.getElementById('audit-body');
   if (!Array.isArray(rows)||!rows.length) {
-    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px">Действий пока нет</td></tr>'; return;
+    body.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:24px">'+t('noActionsYet')+'</td></tr>'; return;
   }
   const actionLabels = {
-    create:'➕ Создание', update:'✏️ Изменение', delete:'🗑 Удаление',
-    archive:'📦 Архив', gdpr_delete:'⚠️ GDPR удаление',
-    scan:'📱 Скан', scan_pin:'📱 Скан (PIN)', manual:'✏️ Ручная отметка',
-    reminder:'⏰ Напоминание',
-    test_wa:'🧪 Тест WA', test_tg:'🧪 Тест TG',
-    broadcast:'📢 Рассылка', import:'📥 Импорт',
-    cleanup:'🧹 Очистка', duplicate:'📋 Копия',
+    create:'➕ '+t('auditCreate'), update:'✏️ '+t('auditUpdate'), delete:'🗑 '+t('auditDelete'),
+    archive:'📦 '+t('auditArchive'), gdpr_delete:'⚠️ '+t('auditGdpr'),
+    scan:'📱 '+t('auditScan'), scan_pin:'📱 '+t('auditScanPin'), manual:'✏️ '+t('auditManual'),
+    reminder:'⏰ '+t('auditReminder'),
+    test_wa:'🧪 '+t('auditTestWA'), test_tg:'🧪 '+t('auditTestTG'),
+    broadcast:'📢 '+t('auditBroadcast'), import:'📥 '+t('auditImport'),
+    cleanup:'🧹 '+t('auditCleanup'), duplicate:'📋 '+t('auditDuplicate'),
   };
   body.innerHTML = rows.map(r => {
     const t = new Date(r.time).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -1589,14 +1894,14 @@ function _buildChips(containerId, currentId, onChange) {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = [
-    `<div class="chip ${!currentId?'active':''}" onclick="(${onChange.toString()})('')">Все</div>`,
+    `<div class="chip ${!currentId?'active':''}" onclick="(${onChange.toString()})('')">${t('all')}</div>`,
     ..._groups.map(g=>`<div class="chip ${currentId===g.id?'active':''}" onclick="(${onChange.toString()})('${g.id}')">${esc(g.name)}</div>`)
   ].join('');
 }
 
 async function _refreshSelects() {
   const sel = document.getElementById('f-group');
-  if (sel) sel.innerHTML='<option value="">— без группы —</option>'+_groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  if (sel) sel.innerHTML='<option value="">'+t('noGroup')+'</option>'+_groups.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
 }
 
 function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -1614,20 +1919,20 @@ async function loadEmailStatus() {
   const det = document.getElementById('em-detail');
   if (r.ready) {
     if (dot) dot.className = 'dot ready';
-    if (lbl) lbl.textContent = 'Подключён ✅';
-    if (det) det.innerHTML = `📧 Сервер: <b>${r.host}</b> · Аккаунт: <b>${r.user}</b>`;
+    if (lbl) lbl.textContent = t('connected')+' ✅';
+    if (det) det.innerHTML = `📧 ${_lang==='kk'?'Сервер':'Сервер'}: <b>${r.host}</b> · ${_lang==='kk'?'Аккаунт':'Аккаунт'}: <b>${r.user}</b>`;
   } else {
     if (dot) dot.className = 'dot err';
-    if (lbl) lbl.textContent = 'Не настроен ❌';
-    if (det) det.innerHTML = 'Добавьте SMTP_HOST, SMTP_USER, SMTP_PASS в <code>.env</code>';
+    if (lbl) lbl.textContent = t('tgNotConfigured')+' ❌';
+    if (det) det.innerHTML = 'SMTP_HOST, SMTP_USER, SMTP_PASS → <code>.env</code>';
   }
 }
 
 async function sendTestEmail() {
   const email = document.getElementById('em-test-addr').value.trim();
-  if (!email) { toast('Введите email', 'err'); return; }
+  if (!email) { toast(t('enterEmail'), 'err'); return; }
   const r = await api('/api/email/test', { method: 'POST', body: JSON.stringify({ email }) });
-  r.error ? toast('Ошибка: ' + r.error, 'err') : toast('Письмо отправлено ✅');
+  r.error ? toast(t('errorLabel')+': ' + r.error, 'err') : toast(t('emailSent')+' ✅');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1637,7 +1942,7 @@ async function loadErrors() {
   const rows = await api('/api/error-log');
   const body = document.getElementById('errors-body');
   if (!Array.isArray(rows) || !rows.length) {
-    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#27ae60;padding:24px">✅ Ошибок нет</td></tr>';
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#27ae60;padding:24px">✅ '+t('noErrors')+'</td></tr>';
     return;
   }
   body.innerHTML = rows.map(r => {
