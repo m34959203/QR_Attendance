@@ -681,19 +681,21 @@ function scanPage(title, content) {
   return `<!DOCTYPE html><html lang="ru"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#667eea">
+<meta name="theme-color" content="#2E5FA3">
 <title>${title} — ${esc(config.SCHOOL_NAME)}</title>
 <style>
+:root{--c-bg-from:#2E5FA3;--c-bg-to:#4472C4;--c-card:#fff;--c-text:#1a1a2e;--c-text2:#666;--c-muted:#aaa;--c-accent:#2E5FA3}
+html[data-theme="dark"]{--c-card:#242526;--c-text:#e4e6eb;--c-text2:#b0b3b8;--c-muted:#6a6c70;--c-accent:#5a8fd4}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);
+body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,var(--c-bg-from),var(--c-bg-to));
      min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-.card{background:#fff;border-radius:24px;padding:48px 40px;text-align:center;
+.card{background:var(--c-card);border-radius:24px;padding:48px 40px;text-align:center;
       box-shadow:0 20px 60px rgba(0,0,0,.2);max-width:380px;width:100%}
 .icon{font-size:72px;margin-bottom:16px}
-h2{font-size:26px;color:#1a1a2e;margin-bottom:8px}
-.school{font-size:13px;color:#aaa;margin-bottom:12px}
-p{color:#666;margin:8px 0;font-size:16px}
-.time{font-size:20px;color:#1a1a2e;margin:16px 0}.time strong{color:#667eea}
+h2{font-size:26px;color:var(--c-text);margin-bottom:8px}
+.school{font-size:13px;color:var(--c-muted);margin-bottom:12px}
+p{color:var(--c-text2);margin:8px 0;font-size:16px}
+.time{font-size:20px;color:var(--c-text);margin:16px 0}.time strong{color:var(--c-accent)}
 .wa-ok{color:#27ae60;font-weight:500;margin-top:16px}
 .already{color:#e67e22;font-weight:500}
 .late{color:#e53935;font-weight:600;font-size:18px;margin-top:8px}
@@ -702,6 +704,7 @@ footer a{color:rgba(255,255,255,.7);text-decoration:none}
 </style></head><body>
 <div class="card">${content}</div>
 <footer><a href="/privacy">Политика конфиденциальности</a> · <a href="/help">Помощь</a></footer>
+<script>(function(){var s=localStorage.getItem('theme')||'auto',d=s==='dark'||(s==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')})()</script>
 </body></html>`;
 }
 
@@ -711,28 +714,30 @@ function groupScanPage(group) {
   return `<!DOCTYPE html><html lang="ru"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#667eea">
+<meta name="theme-color" content="#2E5FA3">
 <title>${groupName} — ${school}</title>
 <style>
+:root{--c-bg-from:#2E5FA3;--c-bg-to:#4472C4;--c-card:#fff;--c-text:#1a1a2e;--c-muted:#aaa;--c-accent:#2E5FA3;--c-input-border:#e0e0e0;--c-ok-bg:#e8f5e9;--c-ok-text:#2e7d32;--c-err-bg:#fce4ec;--c-err-text:#c62828;--c-warn-bg:#fff3e0;--c-warn-text:#e65100}
+html[data-theme="dark"]{--c-card:#242526;--c-text:#e4e6eb;--c-muted:#6a6c70;--c-accent:#5a8fd4;--c-input-border:#4e4f50;--c-ok-bg:#1b3a26;--c-ok-text:#66bb6a;--c-err-bg:#3e1a1a;--c-err-text:#ef9a9a;--c-warn-bg:#3e2a10;--c-warn-text:#ffb74d}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);
+body{font-family:-apple-system,sans-serif;background:linear-gradient(135deg,var(--c-bg-from),var(--c-bg-to));
      min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-.card{background:#fff;border-radius:24px;padding:40px 32px;text-align:center;
+.card{background:var(--c-card);border-radius:24px;padding:40px 32px;text-align:center;
       box-shadow:0 20px 60px rgba(0,0,0,.2);max-width:380px;width:100%}
 .icon{font-size:56px;margin-bottom:12px}
-h2{font-size:22px;color:#1a1a2e;margin-bottom:4px}
-.school{font-size:13px;color:#aaa;margin-bottom:20px}
+h2{font-size:22px;color:var(--c-text);margin-bottom:4px}
+.school{font-size:13px;color:var(--c-muted);margin-bottom:20px}
 .pin-input{width:100%;font-size:32px;text-align:center;letter-spacing:12px;padding:16px;
-           border:2px solid #e0e0e0;border-radius:16px;outline:none;font-weight:700}
-.pin-input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.2)}
-.btn{width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,#667eea,#764ba2);
+           border:2px solid var(--c-input-border);border-radius:16px;outline:none;font-weight:700;background:var(--c-card);color:var(--c-text)}
+.pin-input:focus{border-color:var(--c-accent);box-shadow:0 0 0 3px rgba(46,95,163,.2)}
+.btn{width:100%;padding:16px;margin-top:16px;background:linear-gradient(135deg,var(--c-bg-from),var(--c-bg-to));
      color:#fff;border:none;border-radius:16px;font-size:18px;font-weight:600;cursor:pointer}
 .btn:active{transform:scale(.98)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .msg{margin-top:16px;padding:12px;border-radius:12px;font-size:15px;display:none}
-.msg.ok{display:block;background:#e8f5e9;color:#2e7d32}
-.msg.err{display:block;background:#fce4ec;color:#c62828}
-.msg.warn{display:block;background:#fff3e0;color:#e65100}
+.msg.ok{display:block;background:var(--c-ok-bg);color:var(--c-ok-text)}
+.msg.err{display:block;background:var(--c-err-bg);color:var(--c-err-text)}
+.msg.warn{display:block;background:var(--c-warn-bg);color:var(--c-warn-text)}
 .late-msg{color:#e53935;font-weight:600;margin-top:4px}
 footer{margin-top:20px;font-size:11px;color:rgba(255,255,255,.5)}
 footer a{color:rgba(255,255,255,.7);text-decoration:none}
@@ -749,6 +754,7 @@ footer a{color:rgba(255,255,255,.7);text-decoration:none}
 </div>
 <footer><a href="/privacy">Политика конфиденциальности</a> · <a href="/help">Помощь</a></footer>
 <script>
+(function(){var s=localStorage.getItem('theme')||'auto',d=s==='dark'||(s==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light')})();
 const f=document.getElementById('f'),pin=document.getElementById('pin'),btn=document.getElementById('btn'),msg=document.getElementById('msg');
 pin.addEventListener('input',()=>{pin.value=pin.value.replace(/\\D/g,'');msg.className='msg';msg.style.display='none'});
 f.addEventListener('submit',async e=>{
