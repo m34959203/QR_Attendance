@@ -1,191 +1,81 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { Queue } from 'bullmq';
 import { getDb } from '@wa-gateway/db';
-import { ErrorCode, isValidChatId } from '@wa-gateway/types';
-import type {
-  SendTextBody,
-  SendImageBody,
-  SendDocumentBody,
-  SendAudioBody,
-  SendLocationBody,
-  SendContactBody,
-  SendPollBody,
-  SendReactionBody,
-  SendTypingBody,
-} from '@wa-gateway/types';
+import { getConfig } from '@wa-gateway/config';
+import { ErrorCode } from '@wa-gateway/types';
+import type { SendTextBody, SendImageBody, SendDocumentBody, SendAudioBody, SendLocationBody, SendContactBody, SendPollBody, SendReactionBody, SendTypingBody } from '@wa-gateway/types';
 
 const chatIdPattern = '^\\d+@(s\\.whatsapp\\.net|g\\.us)$';
 
-const sendTextSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'message'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      message: { type: 'string', minLength: 1, maxLength: 10000 },
-      quotedMessageId: { type: 'string' },
-    },
-  },
-};
+let sendQueue: Queue | null = null;
 
-const sendImageSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'image'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      image: { type: 'string' },
-      caption: { type: 'string', maxLength: 3000 },
-    },
-  },
-};
-
-const sendDocumentSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'document', 'fileName'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      document: { type: 'string' },
-      fileName: { type: 'string' },
-      caption: { type: 'string', maxLength: 3000 },
-    },
-  },
-};
-
-const sendAudioSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'audio'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      audio: { type: 'string' },
-    },
-  },
-};
-
-const sendLocationSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'latitude', 'longitude'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      latitude: { type: 'number', minimum: -90, maximum: 90 },
-      longitude: { type: 'number', minimum: -180, maximum: 180 },
-      name: { type: 'string' },
-    },
-  },
-};
-
-const sendContactSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'contact'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      contact: {
-        type: 'object',
-        required: ['name', 'phone'],
-        properties: {
-          name: { type: 'string' },
-          phone: { type: 'string' },
-        },
+function getSendQueue(): Queue {
+  if (!sendQueue) {
+    const config = getConfig();
+    const u = new URL(config.REDIS_URL);
+    sendQueue = new Queue('wa-send', {
+      connection: { host: u.hostname, port: parseInt(u.port || '6379'), password: u.password || undefined },
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 },
+        removeOnComplete: 500,
+        removeOnFail: 1000,
       },
-    },
-  },
-};
+    });
+  }
+  return sendQueue;
+}
 
-const sendPollSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'name', 'options'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      name: { type: 'string' },
-      options: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 12 },
-      multipleAnswers: { type: 'boolean' },
-    },
-  },
-};
+// Schemas
+const mkSchema = (required: string[], props: Record<string, any>) => ({
+  body: { type: 'object', required, properties: { chatId: { type: 'string', pattern: chatIdPattern }, ...props } },
+});
 
-const sendReactionSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'messageId', 'reaction'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      messageId: { type: 'string' },
-      reaction: { type: 'string' },
-    },
-  },
-};
-
-const sendTypingSchema = {
-  body: {
-    type: 'object',
-    required: ['chatId', 'durationMs'],
-    properties: {
-      chatId: { type: 'string', pattern: chatIdPattern },
-      durationMs: { type: 'number', minimum: 100, maximum: 30000 },
-    },
-  },
+const schemas = {
+  text: mkSchema(['chatId', 'message'], { message: { type: 'string', minLength: 1, maxLength: 10000 }, quotedMessageId: { type: 'string' } }),
+  image: mkSchema(['chatId', 'image'], { image: { type: 'string' }, caption: { type: 'string', maxLength: 3000 } }),
+  document: mkSchema(['chatId', 'document', 'fileName'], { document: { type: 'string' }, fileName: { type: 'string' }, caption: { type: 'string', maxLength: 3000 } }),
+  audio: mkSchema(['chatId', 'audio'], { audio: { type: 'string' } }),
+  location: mkSchema(['chatId', 'latitude', 'longitude'], { latitude: { type: 'number', minimum: -90, maximum: 90 }, longitude: { type: 'number', minimum: -180, maximum: 180 }, name: { type: 'string' } }),
+  contact: mkSchema(['chatId', 'contact'], { contact: { type: 'object', required: ['name', 'phone'], properties: { name: { type: 'string' }, phone: { type: 'string' } } } }),
+  poll: mkSchema(['chatId', 'name', 'options'], { name: { type: 'string' }, options: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 12 }, multipleAnswers: { type: 'boolean' } }),
+  reaction: mkSchema(['chatId', 'messageId', 'reaction'], { messageId: { type: 'string' }, reaction: { type: 'string' } }),
+  typing: mkSchema(['chatId', 'durationMs'], { durationMs: { type: 'number', minimum: 100, maximum: 30000 } }),
 };
 
 export async function sendRoutes(app: FastifyInstance) {
 
-  // Helper: check instance is connected
   async function ensureConnected(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-    if (request.params.id !== request.instanceId) {
+    if (!request.isMasterKey && request.params.id !== request.instanceId) {
       reply.status(403).send({ error: ErrorCode.FORBIDDEN, message: 'Access denied', code: 403 });
       return null;
     }
-
     const db = getDb();
-    const instance = await db.instance.findUnique({
-      where: { id: request.params.id },
-      select: { id: true, status: true },
-    });
-
-    if (!instance) {
-      reply.status(404).send({ error: ErrorCode.INSTANCE_NOT_FOUND, message: 'Instance not found', code: 404 });
-      return null;
-    }
-
+    const instance = await db.instance.findUnique({ where: { id: request.params.id }, select: { id: true, status: true } });
+    if (!instance) { reply.status(404).send({ error: ErrorCode.INSTANCE_NOT_FOUND, message: 'Instance not found', code: 404 }); return null; }
     if (instance.status !== 'CONNECTED') {
-      reply.status(409).send({
-        error: ErrorCode.INSTANCE_NOT_CONNECTED,
-        message: 'Instance not connected. Authorize via QR first.',
-        code: 409,
-      });
+      reply.status(409).send({ error: ErrorCode.INSTANCE_NOT_CONNECTED, message: 'Instance not connected. Authorize via QR first.', code: 409 });
       return null;
     }
-
     return instance;
   }
 
-  // Helper: create message record and return standard response
-  async function createOutgoingMessage(
-    instanceId: string,
-    chatId: string,
-    type: string,
-    content: Record<string, unknown>,
-    ip: string,
-  ) {
+  async function enqueueMessage(instanceId: string, chatId: string, type: string, content: Record<string, unknown>) {
     const db = getDb();
     const msgId = `MSG_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const message = await db.message.create({
-      data: {
-        instanceId,
-        messageId: msgId,
-        direction: 'OUTGOING',
-        chatId,
-        type: type as any,
-        content,
-        status: 'PENDING',
-      },
+      data: { instanceId, messageId: msgId, direction: 'OUTGOING', chatId, type: type as any, content, status: 'PENDING' },
     });
 
-    // TODO: enqueue to BullMQ for actual sending via Worker
+    // Enqueue to BullMQ
+    const queue = getSendQueue();
+    const config = getConfig();
+    await queue.add('send', {
+      instanceId, messageDbId: message.id, chatId, type, content,
+    }, {
+      delay: config.MIN_DELAY_BETWEEN_MESSAGES_MS, // anti-spam delay
+    });
 
     return {
       idMessage: msgId,
@@ -195,119 +85,70 @@ export async function sendRoutes(app: FastifyInstance) {
   }
 
   // POST /:id/send/text
-  app.post<{ Params: { id: string }; Body: SendTextBody }>('/:id/send/text', {
-    schema: sendTextSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'TEXT', {
-      text: request.body.message,
-      quotedMessageId: request.body.quotedMessageId,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendTextBody }>('/:id/send/text', { schema: schemas.text }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'TEXT', { text: req.body.message, quotedMessageId: req.body.quotedMessageId });
   });
 
   // POST /:id/send/image
-  app.post<{ Params: { id: string }; Body: SendImageBody }>('/:id/send/image', {
-    schema: sendImageSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'IMAGE', {
-      image: request.body.image,
-      caption: request.body.caption,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendImageBody }>('/:id/send/image', { schema: schemas.image }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'IMAGE', { image: req.body.image, caption: req.body.caption });
   });
 
   // POST /:id/send/document
-  app.post<{ Params: { id: string }; Body: SendDocumentBody }>('/:id/send/document', {
-    schema: sendDocumentSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'DOCUMENT', {
-      document: request.body.document,
-      fileName: request.body.fileName,
-      caption: request.body.caption,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendDocumentBody }>('/:id/send/document', { schema: schemas.document }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'DOCUMENT', { document: req.body.document, fileName: req.body.fileName, caption: req.body.caption });
   });
 
   // POST /:id/send/audio
-  app.post<{ Params: { id: string }; Body: SendAudioBody }>('/:id/send/audio', {
-    schema: sendAudioSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'AUDIO', {
-      audio: request.body.audio,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendAudioBody }>('/:id/send/audio', { schema: schemas.audio }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'AUDIO', { audio: req.body.audio });
   });
 
   // POST /:id/send/location
-  app.post<{ Params: { id: string }; Body: SendLocationBody }>('/:id/send/location', {
-    schema: sendLocationSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'LOCATION', {
-      latitude: request.body.latitude,
-      longitude: request.body.longitude,
-      name: request.body.name,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendLocationBody }>('/:id/send/location', { schema: schemas.location }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'LOCATION', { latitude: req.body.latitude, longitude: req.body.longitude, name: req.body.name });
   });
 
   // POST /:id/send/contact
-  app.post<{ Params: { id: string }; Body: SendContactBody }>('/:id/send/contact', {
-    schema: sendContactSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'CONTACT', {
-      contact: request.body.contact,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendContactBody }>('/:id/send/contact', { schema: schemas.contact }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'CONTACT', { contact: req.body.contact });
   });
 
   // POST /:id/send/poll
-  app.post<{ Params: { id: string }; Body: SendPollBody }>('/:id/send/poll', {
-    schema: sendPollSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'POLL', {
-      name: request.body.name,
-      options: request.body.options,
-      multipleAnswers: request.body.multipleAnswers,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendPollBody }>('/:id/send/poll', { schema: schemas.poll }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'POLL', { name: req.body.name, options: req.body.options, multipleAnswers: req.body.multipleAnswers });
   });
 
   // POST /:id/send/reaction
-  app.post<{ Params: { id: string }; Body: SendReactionBody }>('/:id/send/reaction', {
-    schema: sendReactionSchema,
-  }, async (request, reply) => {
-    const instance = await ensureConnected(request, reply);
-    if (!instance) return;
-
-    return createOutgoingMessage(instance.id, request.body.chatId, 'REACTION', {
-      messageId: request.body.messageId,
-      reaction: request.body.reaction,
-    }, request.ip);
+  app.post<{ Params: { id: string }; Body: SendReactionBody }>('/:id/send/reaction', { schema: schemas.reaction }, async (req, reply) => {
+    const inst = await ensureConnected(req, reply);
+    if (!inst) return;
+    return enqueueMessage(inst.id, req.body.chatId, 'REACTION', { messageId: req.body.messageId, reaction: req.body.reaction });
   });
 
   // POST /:id/send/typing
-  app.post<{ Params: { id: string }; Body: SendTypingBody }>('/:id/send/typing', {
-    schema: sendTypingSchema,
-  }, async (request, reply) => {
-    if (request.params.id !== request.instanceId) {
+  app.post<{ Params: { id: string }; Body: SendTypingBody }>('/:id/send/typing', { schema: schemas.typing }, async (req, reply) => {
+    if (!req.isMasterKey && req.params.id !== req.instanceId) {
       return reply.status(403).send({ error: ErrorCode.FORBIDDEN, message: 'Access denied', code: 403 });
     }
-
-    // TODO: signal worker to send typing indicator via Baileys
-    return { success: true, chatId: request.body.chatId, durationMs: request.body.durationMs };
+    // Signal worker via Redis pub/sub
+    await app.redis.publish('instance:commands', JSON.stringify({
+      action: 'send_typing', instanceId: req.params.id, chatId: req.body.chatId, durationMs: req.body.durationMs,
+    }));
+    return { success: true, chatId: req.body.chatId, durationMs: req.body.durationMs };
   });
 }

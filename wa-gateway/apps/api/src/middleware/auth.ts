@@ -1,13 +1,17 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-import * as bcrypt from 'bcrypt';
 import { getDb } from '@wa-gateway/db';
+import { getConfig } from '@wa-gateway/config';
 import { ErrorCode } from '@wa-gateway/types';
 
 declare module 'fastify' {
   interface FastifyRequest {
     instanceId?: string;
     apiKeyRaw?: string;
+    isMasterKey?: boolean;
+  }
+  interface FastifyInstance {
+    redis: import('ioredis').Redis;
   }
 }
 
@@ -23,14 +27,20 @@ async function authPluginImpl(app: FastifyInstance) {
       });
     }
 
-    const db = getDb();
+    const config = getConfig();
 
-    // Find instance by API key
-    // For MVP: we store API keys as plain text for simplicity
-    // TODO: migrate to bcrypt hashes in production
+    // Master API key can create instances (no instance lookup needed for POST /instances)
+    if (apiKey === config.MASTER_API_KEY) {
+      request.isMasterKey = true;
+      request.apiKeyRaw = apiKey;
+      return;
+    }
+
+    // Instance-specific API key
+    const db = getDb();
     const instance = await db.instance.findUnique({
       where: { apiKey },
-      select: { id: true, apiKey: true },
+      select: { id: true },
     });
 
     if (!instance) {
@@ -46,6 +56,4 @@ async function authPluginImpl(app: FastifyInstance) {
   });
 }
 
-export const authPlugin = fp(authPluginImpl, {
-  name: 'auth-plugin',
-});
+export const authPlugin = fp(authPluginImpl, { name: 'auth-plugin' });
