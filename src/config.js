@@ -13,8 +13,8 @@ module.exports = {
   ADMIN_PASSWORD:     env.ADMIN_PASSWORD || 'admin123',
   SCHOOL_NAME:        env.SCHOOL_NAME || 'Учебный центр',
 
-  // WhatsApp — провайдер: greenapi (по умолчанию), twilio, wwebjs
-  WA_PROVIDER:              env.WA_PROVIDER || 'greenapi',
+  // WhatsApp — провайдер: baileys (по умолчанию), greenapi, twilio, wwebjs
+  WA_PROVIDER:              env.WA_PROVIDER || 'baileys',
   GREEN_API_INSTANCE_ID:    env.GREEN_API_INSTANCE_ID || '',
   GREEN_API_TOKEN:          env.GREEN_API_TOKEN || '',
   GREEN_API_URL:            env.GREEN_API_URL || 'https://api.green-api.com',
