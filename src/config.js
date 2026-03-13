@@ -5,7 +5,10 @@ const env = process.env;
 
 module.exports = {
   PORT:               Number(env.PORT) || 3000,
-  BASE_URL:           (env.BASE_URL || 'http://localhost:3000').replace(/^["']|["']$/g, '').replace(/\/+$/, ''),
+  BASE_URL:           (env.BASE_URL || 'http://localhost:3000')
+                        .replace(/^BASE_URL\s*=\s*/i, '')
+                        .replace(/^["']|["']$/g, '')
+                        .replace(/\/+$/, ''),
   TIMEZONE:           env.TIMEZONE || 'Asia/Almaty',
   ADMIN_PASSWORD:     env.ADMIN_PASSWORD || 'admin123',
   SCHOOL_NAME:        env.SCHOOL_NAME || 'Учебный центр',
